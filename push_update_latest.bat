@@ -21,9 +21,6 @@ if %errorlevel% neq 0 (
     git checkout %branchname%
 )
 
-:: Pull latest changes from remote branch
-git pull origin %branchname%
-
 :: Add, commit, and push changes to the specified branch
 git add .
 git commit -m "auto update"
