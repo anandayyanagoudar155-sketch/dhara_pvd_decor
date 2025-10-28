@@ -1,0 +1,98 @@
+create or alter procedure salesinvoicedetails_insert_update_del(
+@action varchar(max),
+@sales_detail_id bigint=null,
+@sales_id bigint=null,
+@inward_id bigint=null,
+@product_id bigint=null,
+@colour_id bigint=null,
+@unit_id bigint=null,
+@length decimal(12,2)=null,
+@width decimal(12,2)=null,
+@height decimal(12,2)=null,
+@kg decimal(12,2)=null,
+@liters decimal(12,2)=null,
+@totalsqf_runningfeet decimal(12,2)=null,
+@rate decimal(12,2)=null,
+@totalquantity decimal(10,2)=null,
+@gross_amt decimal(12,2)=null,
+@sgst_perc decimal(5,2)=null,
+@sgst_amt decimal(12,2)=null,
+@cgst_perc decimal(5,2)=null,
+@cgst_amt decimal(12,2)=null,
+@igst_perc decimal(5,2)=null,
+@igst_amt decimal(12,2)=null,
+@discount_perc decimal(5,2)=null,
+@discount_amt decimal(12,2)=null,
+@total_amt decimal(12,2)=null,
+@fin_year_id bigint=null,
+@comp_id bigint=null,
+@created_date date=null,
+@updated_date date=null,
+@user_id bigint=null
+)
+as
+begin
+
+
+if @action='insert'
+begin
+insert into salesinvoicedetails(sales_id,inward_id,product_id,colour_id,unit_id,length,width,height,kg,liters,totalsqf_runningfeet,rate,totalquantity,gross_amt,sgst_perc,sgst_amt,
+cgst_perc,cgst_amt,igst_perc,igst_amt,discount_perc,discount_amt,total_amt,fin_year_id,comp_id,created_date,updated_date,user_id)
+values(@sales_id,@inward_id,@product_id,@colour_id,@unit_id,@length,@width,@height,@kg,@liters,@totalsqf_runningfeet,@rate,@totalquantity,@gross_amt,@sgst_perc,@sgst_amt,
+@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,@discount_amt,@total_amt,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id)
+end
+
+if @action='delete'
+begin
+delete from salesinvoicedetails where sales_detail_id=@sales_detail_id;
+end
+
+if @action='update'
+begin
+update salesinvoicedetails
+set sales_id=@sales_id,
+inward_id=@inward_id,
+product_id=@product_id,
+colour_id=@colour_id,
+unit_id=@unit_id,
+length=@length,
+width=@width,
+height=@height,
+kg=@kg,
+liters=@liters,
+totalsqf_runningfeet=@totalsqf_runningfeet,
+rate=@rate,
+totalquantity=@totalquantity,
+gross_amt=@gross_amt,
+sgst_perc=@sgst_perc,
+sgst_amt=@sgst_amt,
+cgst_perc=@cgst_perc,
+cgst_amt=@cgst_amt,
+igst_perc=@igst_perc,
+igst_amt=@igst_amt,
+discount_perc=@discount_perc,
+discount_amt=@discount_amt,
+total_amt=@total_amt,
+fin_year_id=@fin_year_id,
+comp_id=@comp_id,
+created_date=@created_date,
+updated_date=@updated_date,
+user_id=@user_id
+where sales_detail_id=@sales_detail_id;
+end
+
+
+if @action='selectall'
+begin
+select from salesinvoicedetails sales_detail_id,sales_id,inward_id,product_id,colour_id,unit_id,length,width,height,kg,liters,totalsqf_runningfeet,rate,totalquantity,gross_amt,sgst_perc,sgst_amt,
+cgst_perc,cgst_amt,igst_perc,igst_amt,discount_perc,discount_amt,total_amt,fin_year_id,comp_id,created_date,updated_date,user_id
+end
+
+
+if @action='selectone'
+begin
+select from salesinvoicedetails sales_detail_id,sales_id,inward_id,product_id,colour_id,unit_id,length,width,height,kg,liters,totalsqf_runningfeet,rate,totalquantity,gross_amt,sgst_perc,sgst_amt,
+cgst_perc,cgst_amt,igst_perc,igst_amt,discount_perc,discount_amt,total_amt,fin_year_id,comp_id,created_date,updated_date,user_id where sales_detail_id=@sales_detail_id
+end
+
+end

@@ -1,0 +1,186 @@
+create or alter procedure inward_mast_insert_update_del(
+@action varchar(max)=null,
+@inward_id bigint=null,
+@customer_id bigint=null,
+@product_id bigint=null,
+@totalquantity Decimal(10,2)=null,
+@inward_status bit=null,
+@remarks varchar(50)=null,
+@fin_year_id bigint=null,
+@comp_id bigint=null,
+@created_date date=null,
+@updated_date date=null,
+@user_id bigint=null
+)
+as
+begin
+
+declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
+
+if @action='insert'
+begin
+	begin try
+		begin transaction
+			insert into inward_mast(customer_id,product_id,totalquantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id)
+			values(@customer_id,@product_id,@totalquantity,@inward_status,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+	commit transaction;
+	end try
+		begin catch
+			IF XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins 
+				 @ErrorNumber,
+				 @ErrorProcedure,
+				 @ErrorLine,
+				 @ErrorMessage;	
+		end catch
+end
+
+
+
+if @action='delete'
+begin	
+		declare @rec_count bigint
+		set @rec_count = (select 
+            (
+                select count(inward_id) from salesinvoicedetails where inward_id = @inward_id
+            ) +
+            (
+                select count(inward_id) from inward_return where inward_id = @inward_id
+            ) +
+		);
+		
+	if @rec_count > 0
+	begin try
+		begin transaction;
+			delete from inward_mast where inward_id=@inward_id;
+		commit transaction;
+	end try
+		begin catch
+			If XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage			
+		end catch
+end
+
+
+
+if @action='update'
+begin
+	begin try
+		begin transaction
+			update inward_mast
+			set customer_id=@customer_id,
+			product_id=@product_id,
+			totalquantity=@totalquantity,
+			inward_status=@inward_status,
+			remarks=@remarks,
+			fin_year_id=@fin_year_id,
+			comp_id=@comp_id,
+			created_date=@created_date,
+			updated_date=@updated_date,@user_id
+			where inward_id=@inward_id;
+			
+			
+		if @@ROWCOUNT = 0
+		begin
+			rollback transaction;
+			return;
+		end
+
+		commit transaction;
+	end try
+		begin catch
+			IF XACT_STATE() <> 0 
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage			
+		end catch
+end
+
+
+
+if @action='selectall'
+begin
+	begin try
+		select 
+		a.inward_id,
+		b.customer_name,
+		c.product_name,
+		a.totalquantity,
+		a.inward_status,
+		a.remarks,
+		a.fin_year_id,
+		a.comp_id,
+		a.created_date,
+		a.updated_date,
+		a.user_id 
+		a.from inward_mast a
+		a.inner join customer_mast b on a.customer_id=b.customer_id
+		a.inner join product_mast c on a.product_id=c.product_id;
+		
+	end try
+		begin catch
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage
+		end catch
+end
+
+
+
+if @action='selectone'
+begin
+	begin try
+		select inward_id,customer_id,product_id,totalquantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id from inward_mast where inward_id=@inward_id;
+	end try
+	begin catch
+		set @ErrorNumber = ERROR_NUMBER();
+		set @ErrorProcedure = ERROR_PROCEDURE();
+		set @ErrorLine = ERROR_LINE();
+		set @ErrorMessage = ERROR_MESSAGE();
+
+		exec ErrorLog_Ins
+		@ErrorNumber,
+		@ErrorProcedure,
+		@ErrorLine,
+		@ErrorMessage
+	end catch
+end
+
+
+
+
+end
