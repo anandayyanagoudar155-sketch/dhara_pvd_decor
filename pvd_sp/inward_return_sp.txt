@@ -1,0 +1,153 @@
+create or alter procedure inward_return_insert_update_del(
+@action varchar(max)
+@inwardreturn_id bigint=null,
+@inward_id bigint=null,
+@customer_id bigint=null,
+@product_id bigint=null,
+@returnquantity decimal(10,2)=null,
+@remarks varchar(50)=null,
+@fin_year_id bigint=null,
+@comp_id bigint=null,
+@created_date date=null,
+@updated_date date=null,
+@user_id bigint=null
+)
+as
+begin
+
+declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
+
+if @action='insert'
+begin
+	begin try
+		begin transaction
+			insert into inward_return(inward_id,customer_id,product_id,returnquantity,remarks,fin_year_id,comp_id,created_date,updated_date,user_id)
+			values(@inward_id,@customer_id,@product_id,@returnquantity,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id)
+		commit transaction;
+	end try
+		begin catch
+			IF XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins 
+				 @ErrorNumber,
+				 @ErrorProcedure,
+				 @ErrorLine,
+				 @ErrorMessage;	
+		end catch
+end
+
+
+
+if @action='delete'
+begin	
+	begin try
+		begin transaction;
+			delete from inward_return where inwardreturn_id=@inwardreturn_id
+		commit transaction;
+	end try
+		begin catch
+			If XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage			
+		end catch
+end
+
+
+if @action='update'
+begin
+	begin try
+		begin transaction
+			update inward_return
+			set inward_id=@inward_id,
+			customer_id=@customer_id,
+			product_id=@product_id,
+			returnquantity=@returnquantity,
+			remarks=@remarks,
+			fin_year_id=@fin_year_id,
+			comp_id=@comp_id,
+			created_date=@created_date,
+			updated_date=@updated_date,@user_id						
+			where inwardreturn_id=@inwardreturn_id
+				
+			if @@ROWCOUNT = 0
+			begin
+				rollback transaction;
+				return;
+			end
+
+			commit transaction;
+		end try
+			begin catch
+				IF XACT_STATE() <> 0 
+				rollback transaction;
+
+				set @ErrorNumber = ERROR_NUMBER();
+				set @ErrorProcedure = ERROR_PROCEDURE();
+				set @ErrorLine = ERROR_LINE();
+				set @ErrorMessage = ERROR_MESSAGE();
+
+				exec ErrorLog_Ins
+				@ErrorNumber,
+				@ErrorProcedure,
+				@ErrorLine,
+				@ErrorMessage			
+			end catch
+end
+
+
+if @action='selectall'
+begin
+	begin try
+		select inwardreturn_id,inward_id,customer_id,product_id,returnquantity,remarks,fin_year_id,comp_id,created_date,updated_date,user_id from inward_return;	
+	end try
+		begin catch
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage
+		end catch
+end
+
+
+if @action='selectone'
+begin
+	begin try
+		select inwardreturn_id,inward_id,customer_id,product_id,returnquantity,remarks,fin_year_id,comp_id,created_date,updated_date,user_id from inward_return where inwardreturn_id=@inwardreturn_id;
+	end try
+		begin catch
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec ErrorLog_Ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage
+		end catch
+end
+
+end
