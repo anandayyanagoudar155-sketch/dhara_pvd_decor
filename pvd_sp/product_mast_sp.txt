@@ -1,0 +1,265 @@
+create procedure sp_product_mast_ins_upd_del(
+@action varchar(max),
+@product_id bigint=0,
+@prodtype_id bigint=0,
+@brand_id bigint=0,
+@hsn_id bigint=0,
+@unit_id bigint=0,
+@product_name varchar(100)='',
+@product_desc varchar(max)='',
+@rate decimal(12,2)=0,
+@opening_stock decimal(10,2)=0,
+@purchase decimal(10,2)=0,
+@sales decimal(10,2)=0,
+@return decimal(10,2)=0,
+@current_stock decimal(10,2)=0,
+@reorder_threshold decimal(10,2)=0,
+@reorder_desc varchar(max)='',
+@created_date date=null,
+@updated_date date=null,
+@user_id bigint=0
+)
+as
+
+begin
+
+declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
+
+if @action='insert'
+begin
+	begin try
+		begin transaction
+			insert into product_mast(prodtype_id,brand_id,hsn_id,unit_id,product_name,product_desc,rate,opening_stock,purchase,sales,[return],reorder_threshold,reorder_desc,created_date,updated_date,user_id)
+			values(@prodtype_id,@brand_id,@hsn_id,@unit_id,@product_name,@product_desc,@rate,@opening_stock,@purchase,@sales,@return,@reorder_threshold,@reorder_desc,@created_date,@updated_date,@user_id);
+		commit transaction;
+	end try
+		begin catch
+			IF XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec errorlog_ins 
+				 @ErrorNumber,
+				 @ErrorProcedure,
+				 @ErrorLine,
+				 @ErrorMessage;	
+		end catch
+end
+
+
+
+if @action='delete'
+begin	
+		declare @rec_count bigint
+	begin try
+		begin transaction;
+		set @rec_count = (select 
+            (
+                select count(product_id) from inward_mast where product_id = @product_id
+            ) +
+            (
+                select count(product_id) from inward_return where product_id = @product_id
+            ) +
+            (
+                select count(product_id) from PurchaseInvoice_Details where product_id = @product_id
+            ) +
+            (
+                select count(product_id) from salesinvoicedetails where product_id = @product_id
+            ) +
+            (
+                select count(product_id) from dailyconsumption_mast where product_id = @product_id
+            )
+		);
+		
+		if @rec_count > 0
+			begin
+				rollback transaction;
+				return;
+			end
+
+		delete from product_mast where product_id=@product_id;
+		commit transaction;
+		
+	end try
+		begin catch
+			If XACT_STATE() <> 0
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec errorlog_ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage			
+		end catch
+end
+
+
+
+if @action='update'
+begin
+	begin try
+		begin transaction
+			update product_mast
+			set
+			prodtype_id=@prodtype_id,
+			brand_id=@brand_id,
+			hsn_id=@hsn_id,
+			unit_id=@unit_id,
+			product_name=@product_name,
+			product_desc=@product_desc,
+			rate=@rate,
+			opening_stock=@opening_stock,
+			purchase=@purchase,
+			sales=@sales,
+			[return]=@return,
+			reorder_threshold=@reorder_threshold,
+			reorder_desc=@reorder_desc,
+			created_date=@created_date,
+			updated_date=@updated_date,
+			user_id=@user_id
+			where product_id=@product_id;
+			
+		if @@ROWCOUNT = 0
+		begin
+			rollback transaction;
+			return;
+		end
+
+		commit transaction;
+	end try
+		begin catch
+			IF XACT_STATE() <> 0 
+			rollback transaction;
+
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec errorlog_ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage			
+		end catch
+end
+
+
+
+if @action='selectall'
+begin
+	begin try
+		select a.product_id,
+		a.prodtype_id,
+		b.prodtype_name,
+		a.brand_id,
+		c.brand_name,
+		a.hsn_id,
+		d.hsn_code,
+		a.unit_id,
+		e.unit_name,
+		a.product_name,
+		a.product_desc,
+		a.rate,
+		a.opening_stock,
+		a.purchase,
+		a.sales,
+		a.[return],
+		a.current_stock,
+		a.reorder_threshold,
+		a.reorder_desc,
+		a.created_date,
+		a.updated_date,
+		a.user_id 
+		from product_mast a
+		inner join prodtype_master b on a.prodtype_id=b.prodtype_id
+		inner join brand_mast c on a.brand_id=c.brand_id
+		inner join hsn_mast d on a.hsn_id=d.hsn_id
+		inner join unit_mast e on a.unit_id=e.unit_id;
+		
+	end try
+		begin catch
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec errorlog_ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage
+		end catch
+end
+
+
+
+if @action='selectone'
+begin
+	begin try
+		select product_id,
+		prodtype_id,
+		brand_id,
+		hsn_id,
+		unit_id,
+		product_name,
+		product_desc,
+		rate,
+		opening_stock,
+		purchase,
+		sales,
+		[return],
+		current_stock,
+		reorder_threshold,
+		reorder_desc,
+		created_date,
+		updated_date,
+		user_id from product_mast where product_id=@product_id;
+	end try
+		begin catch
+			set @ErrorNumber = ERROR_NUMBER();
+			set @ErrorProcedure = ERROR_PROCEDURE();
+			set @ErrorLine = ERROR_LINE();
+			set @ErrorMessage = ERROR_MESSAGE();
+
+			exec errorlog_ins
+			@ErrorNumber,
+			@ErrorProcedure,
+			@ErrorLine,
+			@ErrorMessage
+		end catch
+end
+
+
+
+if @action = 'productlist'
+begin
+	begin try
+		select product_id,product_name from product_mast;
+	end try
+	begin catch
+		
+		set @ErrorNumber = ERROR_NUMBER();
+		set @ErrorProcedure = ERROR_PROCEDURE();
+		set @ErrorLine = ERROR_LINE();
+		set @ErrorMessage = ERROR_MESSAGE();
+
+		exec errorlog_ins
+		@ErrorNumber,
+		@ErrorProcedure,
+		@ErrorLine,
+		@ErrorMessage			
+	end catch
+end
+
+
+end
