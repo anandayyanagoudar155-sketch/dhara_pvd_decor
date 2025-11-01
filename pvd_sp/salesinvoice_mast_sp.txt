@@ -29,8 +29,8 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			insert into salesinvoice_mast(prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isActive,fin_year_id,comp_id,created_date,updated_date,user_id)
-			values(@prefix,@suffix,@customer_id,@sales_date,@gross_total,@sgst_total,@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@payment_status,@isActive,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			insert into salesinvoice_mast(prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id)
+			values(@prefix,@suffix,@customer_id,@sales_date,@gross_total,@sgst_total,@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@payment_status,@isactive,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
 		commit transaction;
 	end try
 		begin catch
@@ -57,16 +57,12 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = (select 
-            (
-                select count(sales_id) from salesinvoicedetails where sales_id = @sales_id
-            ) +
-            (
-                select count(sales_id) from challan_mast where sales_id = @sales_id
-            ) +
-            (
-                select count(sales_id) from receipt_mast where sales_id = @sales_id
-            )
+		set @rec_count = ( 
+            select count(sales_id) from salesinvoicedetails where sales_id = @sales_id 
+			union all
+            select count(sales_id) from challan_mast where sales_id = @sales_id
+			union all
+            select count(sales_id) from receipt_mast where sales_id = @sales_id
 		);
 		
 		if @rec_count > 0
@@ -115,7 +111,7 @@ begin
 			roundoff_total=@roundoff_total,
 			net_total=@net_total,
 			payment_status=@payment_status,
-			isActive=@isActive,
+			isactive=@isactive,
 			fin_year_id=@fin_year_id,
 			comp_id=@comp_id,
 			created_date=@created_date,
@@ -153,7 +149,7 @@ end
 if @action='selectall'
 begin
 	begin try
-		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isActive,fin_year_id,comp_id,created_date,updated_date,user_id from salesinvoice_mast;
+		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id from salesinvoice_mast;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -174,7 +170,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isActive,fin_year_id,comp_id,created_date,updated_date,user_id from salesinvoice_mast where sales_id=@sales_id;
+		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id from salesinvoice_mast where sales_id=@sales_id;
 	end try
 	begin catch
 		set @ErrorNumber = ERROR_NUMBER();

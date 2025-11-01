@@ -1,4 +1,11 @@
-create proc sp_prodtype_mast_ins_upd_del(
+USE [DharaPvdDecor_db]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_prodtype_mast_ins_upd_del]    Script Date: 11/1/2025 2:11:29 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER proc [dbo].[sp_prodtype_mast_ins_upd_del](
 @action varchar(max),
 @prodtype_id bigint=0,
 @prodtype_name varchar(100)='',
@@ -16,7 +23,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			insert into prodtype_mast(prodtype_name,prodtype_desc,created_date,updated_date,user_id)
+			insert into prodtype_master(prodtype_name,prodtype_desc,created_date,updated_date,user_id)
 			values(@prodtype_name,@prodtype_desc,@created_date,@updated_date,@user_id)
 		commit transaction;
 	end try
@@ -56,7 +63,7 @@ begin
 			return;
 		end
 
-		delete from prodtype_mast where prodtype_id=@prodtype_id;
+		delete from prodtype_master where prodtype_id=@prodtype_id;
 		commit transaction;
 	
 	end try
@@ -83,7 +90,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			update prodtype_mast
+			update prodtype_master
 			set prodtype_name=@prodtype_name,
 			prodtype_desc=@prodtype_desc,
 			created_date=@created_date,
@@ -121,7 +128,7 @@ end
 if @action='selectall'
 begin
 	begin try
-		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_mast;
+		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_master;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -142,7 +149,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_mast where prodtype_id=@prodtype_id;
+		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_master where prodtype_id=@prodtype_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -163,7 +170,7 @@ end
 if @action='prodtypelist'
 begin
 	begin try
-		select prodtype_id,prodtype_name from prodtype_mast;
+		select prodtype_id,prodtype_name from prodtype_master;
 	end try
 	begin catch
 		

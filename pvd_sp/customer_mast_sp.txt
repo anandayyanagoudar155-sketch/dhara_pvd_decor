@@ -56,16 +56,12 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = (select 
-            (
+		set @rec_count = ( 
                 select count(customer_id) from inward_mast where customer_id = @customer_id
-            ) +
-            (
+				union all
                 select count(customer_id) from inward_return where customer_id = @customer_id
-            ) +
-            (
+				union all
                 select count(customer_id) from salesinvoice_mast where customer_id = @customer_id
-            )
 		);
 		
 		if @rec_count > 0

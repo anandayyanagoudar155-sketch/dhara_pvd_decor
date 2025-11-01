@@ -44,13 +44,10 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = (select 
-            (
-                select count(colour_id) from PurchaseInvoice_Details where colour_id = @colour_id
-            ) +
-            (
-                select count(colour_id) from salesinvoicedetails where colour_id = @colour_id
-            ) 
+		set @rec_count = ( 
+            select count(colour_id) from PurchaseInvoice_Details where colour_id = @colour_id
+			union all
+            select count(colour_id) from salesinvoicedetails where colour_id = @colour_id 
 		);
 		
 		if @rec_count > 0

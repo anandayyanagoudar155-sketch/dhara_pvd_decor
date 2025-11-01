@@ -1,5 +1,23 @@
 
 --------------------------------------------------------------------------------------------------
+
+###errorlog
+
+Purpose:
+-This table is meant to store details about errors that occur during SQL operations 
+-(like inside stored procedures, triggers, or transactions).
+
+column name		what it stores
+errorlogid  	-> Auto-increment unique ID for each error log
+errornumber     -> SQL Server error number or custom error code
+errorprocedure  -> Name of the stored procedure or function where the error occurred
+errorline       -> Line number in the SQL code where the error occurred
+errormessage    -> Detailed error message text
+
+Notes:
+
+--------------------------------------------------------------------------------------------------
+
 ###user_mast
 
 Purpose:
@@ -19,67 +37,6 @@ updated_date	-> Date when the user record was last updated
 Notes:
 Essential for authentication and role-based access control.
 user_id is auto-incremented to ensure uniqueness.
-
---------------------------------------------------------------------------------------------------
-
-###company_mast
-
-purpose:
-stores information about companies registered in the system.
-tracks company identification, tax details, and contact information.
-links each company to a user (creator) and city for relational integrity.
-
-column name				what it stores
-comp_id	unique id 		->for each company (primary key)
-comp_code				->unique code assigned to the company
-comp_name				->full name of the company
-comp_short_name			->short name or abbreviation of the company
-comp_type				->type/category of the company
-comp_des				->brief description of the company
-cin_number				->corporate identification number
-gst_number				->gst number of the company
-pan_number				->pan number of the company
-contact_person_name		->name of the company’s primary contact
-contact_email			->email of the contact person
-contact_phone			->phone number of the contact person
-address_line1			->first line of the company’s address
-address_line2			->second line of the company’s address
-city_id					->id of the city (foreign key to city_mast)
-pincode					->postal code of the company’s location
-is_active				->indicates if the company is active (1 = yes, 0 = no)
-created_date			->date when the company record was created
-updated_date			->date when the company record was last updated
-logo_path				->file path of the company logo
-user_id					->id of the user who created the company (foreign key to user_mast)
-
-notes:
-user_id links to user_mast to track the creator of the record.
-city_id links to city_mast for address normalization.
-used for managing multiple companies in the system.
-
-
---------------------------------------------------------------------------------------------------
-
-###user_details
-
-purpose:
-stores detailed mapping of users to companies.
-tracks whether a user is active for a specific company.
-keeps record of who last modified the entry and when.
-
-column name			what it stores
-user_details_id		->unique id for each user detail record (primary key)
-user_id				->id of the user (foreign key to user_mast)
-comp_id				->id of the company (foreign key to company_mast)
-is_active			->indicates if the user is active for the company (1 = yes, 0 = no)
-created_date		->date when the record was created
-updated_date		->date when the record was last updated
-modified_by			->id of the user who last modified the record (foreign key to user_mast)
-
-notes:
-used to manage user access per company.
-user_id and modified_by reference user_mast for relational integrity.
-comp_id links to company_mast to associate the user with a company.
 
 --------------------------------------------------------------------------------------------------
 
@@ -144,6 +101,66 @@ ensures relational integrity with state_mast and traceability via user_mast.
 
 --------------------------------------------------------------------------------------------------
 
+###company_mast
+
+purpose:
+stores information about companies registered in the system.
+tracks company identification, tax details, and contact information.
+links each company to a user (creator) and city for relational integrity.
+
+column name				what it stores
+comp_id	unique id 		->for each company (primary key)
+comp_code				->unique code assigned to the company
+comp_name				->full name of the company
+comp_short_name			->short name or abbreviation of the company
+comp_type				->type/category of the company
+comp_des				->brief description of the company
+cin_number				->corporate identification number
+gst_number				->gst number of the company
+pan_number				->pan number of the company
+contact_person_name		->name of the company’s primary contact
+contact_email			->email of the contact person
+contact_phone			->phone number of the contact person
+address_line1			->first line of the company’s address
+address_line2			->second line of the company’s address
+city_id					->id of the city (foreign key to city_mast)
+pincode					->postal code of the company’s location
+is_active				->indicates if the company is active (1 = yes, 0 = no)
+created_date			->date when the company record was created
+updated_date			->date when the company record was last updated
+logo_path				->file path of the company logo
+user_id					->id of the user who created the company (foreign key to user_mast)
+
+notes:
+user_id links to user_mast to track the creator of the record.
+city_id links to city_mast for address normalization.
+used for managing multiple companies in the system.
+
+--------------------------------------------------------------------------------------------------
+
+###user_details
+
+purpose:
+stores detailed mapping of users to companies.
+tracks whether a user is active for a specific company.
+keeps record of who last modified the entry and when.
+
+column name			what it stores
+user_details_id		->unique id for each user detail record (primary key)
+user_id				->id of the user (foreign key to user_mast)
+comp_id				->id of the company (foreign key to company_mast)
+is_active			->indicates if the user is active for the company (1 = yes, 0 = no)
+created_date		->date when the record was created
+updated_date		->date when the record was last updated
+modified_by			->id of the user who last modified the record (foreign key to user_mast)
+
+notes:
+used to manage user access per company.
+user_id and modified_by reference user_mast for relational integrity.
+comp_id links to company_mast to associate the user with a company.
+
+--------------------------------------------------------------------------------------------------
+
 ###month_mast
 
 purpose:
@@ -175,7 +192,7 @@ defines the start and end dates for each financial year.
 tracks who created or updated the record and when.
 
 column name		what it stores
-fin_year_id	->unique id for each financial year (primary key)
+fin_year_id		->unique id for each financial year (primary key)
 fin_name		->full name of the financial year (e.g., 2024-2025)
 short_fin_name	->short name or abbreviation of the financial year
 year_start		->start date of the financial year
@@ -188,7 +205,6 @@ notes:
 used for grouping and managing transactions by financial year.
 user_id ensures traceability of who created or last modified the record.
 
-
 --------------------------------------------------------------------------------------------------
 
 ###emp_calenderdays
@@ -200,11 +216,11 @@ tracks who created or updated the record and when.
 
 column name			what it stores
 emp_calender_id		->unique id for each employee calendar record
-fin_year_id		->id of the financial year (foreign key to fin_years_mast)
+fin_year_id			->id of the financial year (foreign key to fin_years_mast)
 month_id			->id of the month (foreign key to month_mast)
 month_days			->total number of days in the month
-emp_holidays	->number of holidays for employees in that month
-emp_weekends	->number of weekends for employees in that month
+emp_holidays		->number of holidays for employees in that month
+emp_weekends		->number of weekends for employees in that month
 created_date		->date when the record was created
 updated_date		->date when the record was last updated
 user_id				->id of the user who created or updated the record (foreign key to user_mast)
@@ -213,6 +229,141 @@ notes:
 used to manage and calculate employee attendance and salary processing.
 integrates with financial year and month tables for proper period tracking.
 
+--------------------------------------------------------------------------------------------------
+
+###colour_mast
+
+purpose:
+stores information about available colours used in products or items.
+helps in maintaining standardized colour references across the system.
+tracks who created or updated the record.
+
+column name		what it stores
+colour_id		->unique id for each colour (primary key)
+colour_name		->name of the colour
+is_active		->indicates if the colour is active (1 = yes, 0 = no)
+created_date	->date when the colour record was created
+updated_date	->date when the colour record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used as a reference table for products, inventory, or design attributes.
+ensures consistency in colour naming throughout the system.
+
+--------------------------------------------------------------------------------------------------
+
+###unit_mast
+
+purpose:
+stores information about measurement units used in products or materials.
+helps maintain consistency in quantity and unit references across transactions.
+tracks who created or updated each unit record.
+
+column name		what it stores
+unit_id			->unique id for each unit (primary key)
+unit_name		->name of the unit (e.g., kg, liter, piece)
+unit_desc		->short description of the unit
+is_active		->indicates if the unit is active (1 = yes, 0 = no)
+created_date	->date when the unit record was created
+updated_date	->date when the unit record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used as a reference table for product, inventory, and purchase modules.
+ensures standardized unit management throughout the system.
+
+--------------------------------------------------------------------------------------------------
+
+###hsn_mast
+
+purpose:
+stores hsn (harmonized system of nomenclature) codes used for tax classification.
+defines the corresponding gst percentage rates for each code.
+tracks who created or updated each record.
+
+column name		what it stores
+hsn_id			->unique id for each hsn record (primary key)
+hsn_code		->hsn code used for product or service classification under gst
+cgst_perc		->cgst percentage applicable for the hsn code
+sgst_perc		->sgst percentage applicable for the hsn code
+igst_perc		->igst percentage applicable for the hsn code
+created_date	->date when the hsn record was created
+updated_date	->date when the hsn record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used for gst calculation during sales and purchase transactions.
+ensures proper tax compliance and reporting.
+
+--------------------------------------------------------------------------------------------------
+
+###prodtype_master
+
+purpose:
+stores information about different types or categories of products.
+helps in classifying products service or product.
+tracks who created or updated each product type record.
+
+column name		what it stores
+prodtype_id		->unique id for each product type (primary key)
+prodtype_name	->defines eiter the product_type is service or product
+prodtype_desc	->description or name of the product type
+created_date	->date when the product type record was created
+updated_date	->date when the product type record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used as a reference table in product and inventory modules.
+ensures consistent categorization of products across the system
+
+--------------------------------------------------------------------------------------------------
+
+###brand_mast
+
+purpose:
+stores information about product brands available in the system.
+helps in organizing and categorizing products by brand.
+tracks who created or updated each brand record.
+
+column name		what it stores
+brand_id		->unique id for each brand (primary key)
+brand_name		->name of the brand
+brand_desc		->short description of the brand
+created_date	->date when the brand record was created
+updated_date	->date when the brand record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used as a reference for linking brands to products.
+ensures consistency in brand naming and reporting.
+
+--------------------------------------------------------------------------------------------------
+
+###prodtype_master
+
+purpose:
+stores types of payment methods (e.g., cash, cheque, card, UPI).
+helps standardize payment modes across transactions.
+tracks who created or updated each payment type record.
+
+column name		what it stores
+paytype_id		->unique id for each payment type (primary key)
+paytype_name	->name of the payment type
+paytype_desc	->description or notes about the payment type
+created_date	->date when the record was created
+updated_date	->date when the record was last updated
+user_id			->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+used as a reference for receipts, payments, and invoices.
+ensures consistency in payment type management across the system.
+we will be accepting 
+-Cash
+-Cheque
+-Bank Transfer
+-card
+-UPI
+-Net Banking
 
 --------------------------------------------------------------------------------------------------
 
@@ -282,119 +433,6 @@ ensures relational integrity with city_mast and user_mast.
 
 --------------------------------------------------------------------------------------------------
 
-###colour_mast
-
-purpose:
-stores information about available colours used in products or items.
-helps in maintaining standardized colour references across the system.
-tracks who created or updated the record.
-
-column name		what it stores
-colour_id		->unique id for each colour (primary key)
-colour_name		->name of the colour
-is_active		->indicates if the colour is active (1 = yes, 0 = no)
-created_date	->date when the colour record was created
-updated_date	->date when the colour record was last updated
-user_id			->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used as a reference table for products, inventory, or design attributes.
-ensures consistency in colour naming throughout the system.
-
-
---------------------------------------------------------------------------------------------------
-
-
-###unit_mast
-
-purpose:
-stores information about measurement units used in products or materials.
-helps maintain consistency in quantity and unit references across transactions.
-tracks who created or updated each unit record.
-
-column name		what it stores
-unit_id			->unique id for each unit (primary key)
-unit_name		->name of the unit (e.g., kg, liter, piece)
-unit_desc		->short description of the unit
-is_active		->indicates if the unit is active (1 = yes, 0 = no)
-created_date	->date when the unit record was created
-updated_date	->date when the unit record was last updated
-user_id			->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used as a reference table for product, inventory, and purchase modules.
-ensures standardized unit management throughout the system.
-
-
---------------------------------------------------------------------------------------------------
-
-###hsn_mast
-
-purpose:
-stores hsn (harmonized system of nomenclature) codes used for tax classification.
-defines the corresponding gst percentage rates for each code.
-tracks who created or updated each record.
-
-column name		what it stores
-hsn_id			->unique id for each hsn record (primary key)
-hsn_code		->hsn code used for product or service classification under gst
-cgst_perc		->cgst percentage applicable for the hsn code
-sgst_perc		->sgst percentage applicable for the hsn code
-igst_perc		->igst percentage applicable for the hsn code
-created_date	->date when the hsn record was created
-updated_date	->date when the hsn record was last updated
-user_id			->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used for gst calculation during sales and purchase transactions.
-ensures proper tax compliance and reporting.
-
-
---------------------------------------------------------------------------------------------------
-
-###prodtype_master
-
-purpose:
-stores information about different types or categories of products.
-helps in classifying products service or product.
-tracks who created or updated each product type record.
-
-column name			what it stores
-prodtype_id		->unique id for each product type (primary key)
-prodtype_name	->defines eiter the product_type is service or product
-prodtype_desc	->description or name of the product type
-created_date		->date when the product type record was created
-updated_date		->date when the product type record was last updated
-user_id				->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used as a reference table in product and inventory modules.
-ensures consistent categorization of products across the system
-
---------------------------------------------------------------------------------------------------
-
-###brand_mast
-
-purpose:
-stores information about product brands available in the system.
-helps in organizing and categorizing products by brand.
-tracks who created or updated each brand record.
-
-column name		what it stores
-brand_id		->unique id for each brand (primary key)
-brand_name		->name of the brand
-brand_desc		->short description of the brand
-created_date	->date when the brand record was created
-updated_date	->date when the brand record was last updated
-user_id			->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used as a reference for linking brands to products.
-ensures consistency in brand naming and reporting.
-
-
---------------------------------------------------------------------------------------------------
-
 ###product_mast
 
 purpose:
@@ -412,12 +450,12 @@ product_name		->name of the product
 product_desc		->description of the product
 rate				->base price or rate of the product
 opening_stock		->initial quantity available
-Purchase			->total purchased quantity
-Sales				->total sold quantity
-Return				->total returned quantity
+purchase			->total purchased quantity
+sales				->total sold quantity
+return				->total returned quantity
 current_stock		->current available stock
-Reorder_Threshold	->minimum stock level before reorder
-Reorder_Desc		->remarks or reason for reorder
+reorder_Threshold	->minimum stock level before reorder
+reorder_Desc		->remarks or reason for reorder
 created_date		->date of creation
 updated_date		->last modified date
 user_id				->id of user who created or updated the record
@@ -441,7 +479,7 @@ product_id		->references product being received
 totalquantity	->total quantity received
 inward_status	->status flag (1 = active/received, 0 = inactive/cancelled)
 remarks			->additional comments or notes
-fin_year_id	->references current financial year
+fin_year_id		->references current financial year
 comp_id			->references company
 created_date	->entry creation date
 updated_date	->last modification date
@@ -457,13 +495,13 @@ purpose:
 to record product returns from previous inward transactions.
 
 column name	description
-inwardreturn_id	->unique id for each return
+inwardreturn_id		->unique id for each return
 inward_id			->reference to original inward entry
 customer_id			->customer/vendor who returned the goods
 product_id			->returned product reference
 returnquantity		->number of units returned
 remarks				->additional comments
-fin_year_id		->reference to financial year
+fin_year_id			->reference to financial year
 comp_id				->reference to company
 created_date		->entry creation date
 updated_date		->last update date
@@ -495,7 +533,7 @@ round_off_total			->rounding adjustment
 net_total				->final net _amt after taxes and discounts
 payment_status			->indicates if payment is completed (1 = yes, 0 = no)
 is_active				->indicates if invoice is active (1 = yes, 0 = no)
-fin_year_id			->reference to financial year
+fin_year_id				->reference to financial year
 comp_id					->reference to company
 created_date			->date when invoice was created
 updated_date			->date when invoice was last updated
@@ -557,7 +595,7 @@ links each challan to the corresponding sales invoice, company, financial year, 
 column name		what it stores
 challan_id		->unique id for each challan (primary key)
 sales_id		->reference to the sales invoice
-fin_year_id	->reference to financial year
+fin_year_id		->reference to financial year
 comp_id			->reference to company
 created_date	->date when the challan was created
 updated_date	->date when the challan was last updated
@@ -580,10 +618,10 @@ column name				what it stores
 receipt_id				->unique id for each receipt (primary key)
 sales_id				->reference to the sales invoice
 receipt_date			->date when the receipt was created
-net_total		->total _amt received
-balance_amount	->remaining balance after payment
+net_total				->total _amt received
+balance_amount			->remaining balance after payment
 receipt_status			->payment status (1 = paid, 0 = pending)
-fin_year_id			->reference to financial year
+fin_year_id				->reference to financial year
 comp_id					->reference to company
 created_date			->date when the receipt was created
 updated_date			->date when the receipt was last updated
@@ -595,38 +633,9 @@ ensures relational integrity with salesinvoice_mast, company_mast, financial_mas
 
 --------------------------------------------------------------------------------------------------
 
-###paytype_mast
-
-purpose:
-stores types of payment methods (e.g., cash, cheque, card, UPI).
-helps standardize payment modes across transactions.
-tracks who created or updated each payment type record.
-
-column name		what it stores
-paytype_id		->unique id for each payment type (primary key)
-paytype_name	->name of the payment type
-paytype_desc	->description or notes about the payment type
-created_date	->date when the record was created
-updated_date	->date when the record was last updated
-user_id			->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-used as a reference for receipts, payments, and invoices.
-ensures consistency in payment type management across the system.
-we will be accepting 
--Cash
--Cheque
--Bank Transfer
--card
--UPI
--Net Banking
-
---------------------------------------------------------------------------------------------------
-
 ###receipt_details
 
 purpose:
-
 stores detailed payment information for each receipt.
 tracks _amt, payment method, and transaction-specific details (cheque, card, bank, etc.).
 links to receipt header, payment type, company, financial year, and user.
@@ -635,7 +644,7 @@ column name			what it stores
 receipt_dtl_id		->unique id for each receipt line (primary key)
 receipt_id			->reference to parent receipt
 pay_type_id			->reference to payment type
-total_Amt			->_amt paid using this payment method
+total_amt			->_amt paid using this payment method
 cheque_number		->cheque number (if payment via cheque)
 cheque_bankname		->bank name of cheque
 ifsc_code			->IFSC code of cheque bank
@@ -726,7 +735,7 @@ discount_amt			->discount _amt
 total_amt				->total net _amt after taxes and discounts
 created_date			->record creation date
 updated_date			->last update date
-fin_year_id			->reference to financial year
+fin_year_id				->reference to financial year
 comp_id					->reference to company
 user_id					->reference to user
 
@@ -736,6 +745,24 @@ ensures relational integrity with purchaseinvoice_mast, product_mast, colour_mas
 
 --------------------------------------------------------------------------------------------------
 
+###transaction_type_mast
+
+purpose:
+stores types of transaction (e.g., purchase related or employee salary related).
+helps standardize transaction_type modes across payment transactions.
+tracks who created or updated each transaction type record.
+
+column name			what it stores
+trans_id			->unique id for each transaction (primary key)
+transtype_name		->defines either the payment transaction is employee related or purchase related
+transtype_desc		->description or name of the trans_type_name
+created_date		->date when the transaction type record was created
+updated_date		->date when the transaction type record was last updated
+user_id				->id of the user who created or updated the record (foreign key to user_mast)
+
+notes:
+
+--------------------------------------------------------------------------------------------------
 
 ###dailyconsumption_master
 
@@ -745,8 +772,8 @@ stores quantity used, purpose, and associated units.
 links consumption to product, unit, company, financial year, and user.
 
 column name			what it stores
-cons_id				->id for each consumption entry (primary key)
-cons_date			->date of consumption
+dailycons_id		->id for each consumption entry (primary key)
+dailycons_date		->date of consumption
 product_id			->reference to the product consumed
 unit_id				->reference to unit of measurement
 quantityconsumed	->quantity of product consumed
@@ -762,7 +789,6 @@ useful for inventory tracking and cost analysis.
 ensures relational integrity with product_mast, unit_mast, company_mast, financial_mast, and user_mast.
 
 --------------------------------------------------------------------------------------------------
-
 
 ###employee_desg_mast
 
@@ -823,9 +849,7 @@ notes:
 essential for HR, payroll, and attendance management.
 ensures relational integrity with employee_designations_mast, city_mast, company_mast, financial_mast, and user_mast.
 
-
 --------------------------------------------------------------------------------------------------
-
 
 ###leavetype_mast
 
@@ -849,7 +873,6 @@ user_id				->reference to user who created/updated the leave type
 notes:
 used for leave management and HR processes.
 ensures relational integrity with user_mast.
-
 --------------------------------------------------------------------------------------------------
 
 emp_leave_mast
@@ -876,7 +899,6 @@ user_id					->reference to user who recorded the leave
 notes:
 used for leave management, reporting, and payroll integration.
 ensures relational integrity with employee_mast, emp_calenderdays, financial_mast, and user_mast.
-
 
 --------------------------------------------------------------------------------------------------
 
@@ -914,37 +936,14 @@ notes:
 used for payroll processing and accounting.
 ensures relational integrity with employee_mast, company_mast, emp_calenderdays, financial_mast, and user_mast.
 
-
---------------------------------------------------------------------------------------------------
-
-
-###transaction_type_mast
-
-purpose:
-stores types of transaction (e.g., purchase related or employee salary related).
-helps standardize transaction_type modes across payment transactions.
-tracks who created or updated each transaction type record.
-
-column name			what it stores
-trans_id			->unique id for each transaction (primary key)
-transtype_name		->defines either the payment transaction is employee related or purchase related
-transtype_desc		->description or name of the trans_type_name
-created_date		->date when the transaction type record was created
-updated_date		->date when the transaction type record was last updated
-user_id				->id of the user who created or updated the record (foreign key to user_mast)
-
-notes:
-
 --------------------------------------------------------------------------------------------------
 
 ###payment_mast
-
 
 purpose:
 stores payment/header information for payments sent/done against purchase invoices or employee salaray.
 tracks total _amt, balance, and payment status.
 links each payment to purchase, employee, company, financial year, and user.
-
 
 column name				what it stores
 payment_id				->unique id for each receipt (primary key)
@@ -957,7 +956,7 @@ balance_total			->remaining balance after payment
 payment_status			->payment status (1 = paid, 0 = pending)
 created_date			->date when the payment was created
 updated_date			->date when the payment was last updated
-fin_year_id			->reference to financial year
+fin_year_id				->reference to financial year
 comp_id					->reference to company
 user_id					->reference to user who created the payment
 
@@ -976,7 +975,7 @@ column name			what it stores
 payment_detail_id	->unique id for each payment line (primary key)
 payment_id			->reference to parent payment
 pay_type_id			->reference to payment type
-total_amount		->amt paid using this payment method
+total_amt			->amt paid using this payment method
 cheque_number		->cheque number (if payment via cheque)
 cheque_bankname		->bank name of cheque
 ifsc_code			->IFSC code of cheque bank
@@ -994,35 +993,3 @@ user_id				->reference to user who recorded the payment
 notes:
 
 --------------------------------------------------------------------------------------------------
-
-
-========++++++++++++++++++++========================++++++++++++++++++++++++++++++==================
-
----Extra Rough Work
-
-###employee_transactions_mast
-
-stores payroll transactions for each employee per month and financial year.
-tracks total salary, deductions, net salary, and payment status.
-links transactions to employee, company, month, financial year, and user.
-
-column name			what it stores
-emp_trans_id		->unique id for each employee transaction (primary key)
-fin_year_id		->reference to financial year
-month_id			->reference to month in the calendar
-comp_id				->reference to company
-employee_id			->reference to employee
-transaction_date	->date of salary transaction
-total_amt			->total salary _amt before deductions
-totaldeductions		->total deductions applied
-netsalary			->final net salary payable
-paymentstatus		->indicates if salary is paid (1 = yes, 0 = no)
-remarks				->notes or comments for the transaction
-status				->indicates active/inactive status of the transaction
-created_date		->record creation date
-updated_date		->record last update date
-user_id				->reference to user who processed the transaction
-
-notes:
-used for payroll accounting and salary management.
-ensures relational integrity with employee_mast, company_mast, emp_calenderdays, financial_mast, and user_mast.
