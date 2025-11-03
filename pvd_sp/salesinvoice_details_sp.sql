@@ -1,4 +1,4 @@
-create procedure sp_salesinvoicedetails_ins_upd_del(
+create procedure [dbo].[sp_salesinvoicedetails_ins_upd_del](
 @action varchar(max),
 @sales_detail_id bigint=0,
 @sales_id bigint=0,
@@ -70,6 +70,17 @@ begin
 			user_id)
 			values(@sales_id,@inward_id,@product_id,@colour_id,@unit_id,@length,@width,@height,@kg,@liters,@totalsqf_runningfeet,@rate,@totalquantity,@gross_amt,@sgst_perc,@sgst_amt,
 			@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,@discount_amt,@total_amt,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id)
+		
+				update salesinvoice_mast
+				set 
+				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
+				where sales_id = @sales_id;
+		
 		commit transaction;
 	end try
 		begin catch
@@ -96,6 +107,17 @@ begin
 	begin try
 		begin transaction;
 			delete from salesinvoicedetails where sales_detail_id=@sales_detail_id;
+
+				update salesinvoice_mast
+				set 
+				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
+				where sales_id = @sales_id;
+
 		commit transaction;
 	
 	end try
@@ -152,6 +174,16 @@ begin
 			updated_date=@updated_date,
 			user_id=@user_id
 			where sales_detail_id=@sales_detail_id;
+
+				update salesinvoice_mast
+				set 
+				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
+				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
+				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
+				where sales_id = @sales_id;
 
 		if @@ROWCOUNT = 0
 		begin

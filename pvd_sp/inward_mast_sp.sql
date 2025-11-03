@@ -1,15 +1,14 @@
-USE [DharaPvdDecor_db]
-GO
-/****** Object:  StoredProcedure [dbo].[sp_prodtype_mast_ins_upd_del]    Script Date: 11/1/2025 2:11:29 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-ALTER proc [dbo].[sp_prodtype_mast_ins_upd_del](
-@action varchar(max),
-@prodtype_id bigint=0,
-@prodtype_name varchar(100)='',
-@prodtype_desc varchar(max)='',
+create procedure sp_inward_mast_ins_upd_del(
+@action varchar(max)=null,
+@inward_id bigint=0,
+@customer_id bigint=0,
+@product_id bigint=0,
+@totalquantity decimal(10,2)=0,
+@balance decimal(10,2)=0,
+@inward_status bit=0,
+@remarks varchar(50)='',
+@fin_year_id bigint=0,
+@comp_id bigint=0,
 @created_date date=null,
 @updated_date date=null,
 @user_id bigint=0
@@ -23,9 +22,9 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			insert into prodtype_master(prodtype_name,prodtype_desc,created_date,updated_date,user_id)
-			values(@prodtype_name,@prodtype_desc,@created_date,@updated_date,@user_id)
-		commit transaction;
+			insert into inward_mast(customer_id,product_id,totalquantity,balance,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id)
+			values(@customer_id,@product_id,@totalquantity,@balance,@inward_status,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+	commit transaction;
 	end try
 		begin catch
 			IF XACT_STATE() <> 0
@@ -51,21 +50,22 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = (select 
-            (
-                select count(prodtype_id) from product_mast where prodtype_id = @prodtype_id
-            ) 
-		);
+		set @rec_count = (select sum(cnt)
+			from (
+			select count(inward_id) as cnt from salesinvoicedetails where inward_id = @inward_id
+			union all
+			select count(inward_id) as cnt from inward_return where inward_id = @inward_id
+		) as rec_count);
 		
 		if @rec_count > 0
-		begin
-			rollback transaction;
-			return;
-		end
+			begin
+				rollback transaction;
+				return;
+			end
 
-		delete from prodtype_master where prodtype_id=@prodtype_id;
+		delete from inward_mast where inward_id=@inward_id;
 		commit transaction;
-	
+		
 	end try
 		begin catch
 			If XACT_STATE() <> 0
@@ -90,14 +90,21 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			update prodtype_master
-			set prodtype_name=@prodtype_name,
-			prodtype_desc=@prodtype_desc,
+			update inward_mast
+			set customer_id=@customer_id,
+			product_id=@product_id,
+			totalquantity=@totalquantity,
+			balance=@balance,
+			inward_status=@inward_status,
+			remarks=@remarks,
+			fin_year_id=@fin_year_id,
+			comp_id=@comp_id,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
-			where prodtype_id=@prodtype_id;
-
+			@user_id=@user_id
+			where inward_id=@inward_id;
+			
+			
 		if @@ROWCOUNT = 0
 		begin
 			rollback transaction;
@@ -128,7 +135,23 @@ end
 if @action='selectall'
 begin
 	begin try
-		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_master;
+		select 
+		a.inward_id,
+		b.customer_name,
+		c.product_name,
+		a.totalquantity,
+		a.balance,
+		a.inward_status,
+		a.remarks,
+		a.fin_year_id,
+		a.comp_id,
+		a.created_date,
+		a.updated_date,
+		a.user_id 
+		from inward_mast a
+		inner join customer_mast b on a.customer_id=b.customer_id
+		inner join product_mast c on a.product_id=c.product_id;
+		
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -149,31 +172,9 @@ end
 if @action='selectone'
 begin
 	begin try
-		select prodtype_id,prodtype_name,prodtype_desc,created_date,updated_date,user_id from prodtype_master where prodtype_id=@prodtype_id;
-	end try
-		begin catch
-			set @ErrorNumber = ERROR_NUMBER();
-			set @ErrorProcedure = ERROR_PROCEDURE();
-			set @ErrorLine = ERROR_LINE();
-			set @ErrorMessage = ERROR_MESSAGE();
-
-			exec errorlog_ins
-			@ErrorNumber,
-			@ErrorProcedure,
-			@ErrorLine,
-			@ErrorMessage
-		end catch
-end
-
-
-
-if @action='prodtypelist'
-begin
-	begin try
-		select prodtype_id,prodtype_name from prodtype_master;
+		select inward_id,customer_id,product_id,totalquantity,balance,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id from inward_mast where inward_id=@inward_id;
 	end try
 	begin catch
-		
 		set @ErrorNumber = ERROR_NUMBER();
 		set @ErrorProcedure = ERROR_PROCEDURE();
 		set @ErrorLine = ERROR_LINE();
@@ -183,9 +184,11 @@ begin
 		@ErrorNumber,
 		@ErrorProcedure,
 		@ErrorLine,
-		@ErrorMessage			
+		@ErrorMessage
 	end catch
 end
+
+
 
 
 end

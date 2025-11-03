@@ -57,17 +57,18 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = ( 
-                select count(product_id) from inward_mast where product_id = @product_id
+		set @rec_count = (select sum(cnt)
+				from ( 
+                select count(product_id) as cnt from inward_mast where product_id = @product_id
 				union all
-                select count(product_id) from inward_return where product_id = @product_id
+                select count(product_id) as cnt from inward_return where product_id = @product_id
 				union all
-                select count(product_id) from PurchaseInvoice_Details where product_id = @product_id
+                select count(product_id) as cnt from PurchaseInvoice_Details where product_id = @product_id
 				union all
-                select count(product_id) from salesinvoicedetails where product_id = @product_id
+                select count(product_id) as cnt from salesinvoicedetails where product_id = @product_id
 				union all
-                select count(product_id) from dailyconsumption_mast where product_id = @product_id
-		);
+                select count(product_id) as cnt from dailyconsumption_mast where product_id = @product_id
+		) as rec_count);
 		
 		if @rec_count > 0
 			begin

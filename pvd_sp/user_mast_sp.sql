@@ -45,77 +45,78 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = (
-			select count(user_id) from customer_mast where user_id = @user_id
+		set @rec_count = (select sum(cnt)
+			from (
+			select count(user_id) as cnt from customer_mast where user_id = @user_id
 			union all			
-			select count(user_id) from product_mast where user_id = @user_id
+			select count(user_id) as cnt from product_mast where user_id = @user_id
 			union all
-			select count(user_id) from inward_mast where user_id = @user_id
+			select count(user_id) as cnt from inward_mast where user_id = @user_id
 			union all			
-			select count(user_id) from inward_return where user_id = @user_id
+			select count(user_id) as cnt from inward_return where user_id = @user_id
 			union all			
-			select count(user_id) from salesinvoice_mast where user_id = @user_id
+			select count(user_id) as cnt from salesinvoice_mast where user_id = @user_id
 			union all			
-            select count(user_id) from salesinvoicedetails where user_id = @user_id
+            select count(user_id) as cnt from salesinvoicedetails where user_id = @user_id
 			union all			
-			select count(user_id) from challan_mast where user_id = @user_id
+			select count(user_id) as cnt from challan_mast where user_id = @user_id
 			union all			
-			select count(user_id) from receipt_mast where user_id = @user_id
+			select count(user_id) as cnt from receipt_mast where user_id = @user_id
 			union all			
-			select count(user_id) from receipt_details where user_id = @user_id 
+			select count(user_id) as cnt from receipt_details where user_id = @user_id 
 			union all			
-			select count(user_id) from user_details where user_id = @user_id
+			select count(user_id) as cnt from user_details where user_id = @user_id
 			union all			
-			select count(user_id) from company_mast where user_id = @user_id
+			select count(user_id) as cnt from company_mast where user_id = @user_id
 			union all			
-			select count(user_id) from colour_mast where user_id = @user_id
+			select count(user_id) as cnt from colour_mast where user_id = @user_id
 			union all			
-			select count(user_id) from unit_mast where user_id = @user_id
+			select count(user_id) as cnt from unit_mast where user_id = @user_id
 			union all			
-			select count(user_id) from hsn_mast where user_id = @user_id
+			select count(user_id) as cnt from hsn_mast where user_id = @user_id
 			union all
-			select count(user_id) from prodtype_master where user_id = @user_id
+			select count(user_id) as cnt from prodtype_master where user_id = @user_id
 			union all			
-            select count(user_id) from brand_mast where user_id = @user_id
+            select count(user_id) as cnt from brand_mast where user_id = @user_id
 			union all			
-			select count(user_id) from paytype_mast where user_id = @user_id
+			select count(user_id) as cnt from paytype_mast where user_id = @user_id
 			union all			
-			select count(user_id) from vendor_mast where user_id = @user_id
+			select count(user_id) as cnt from vendor_mast where user_id = @user_id
 			union all			
-			select count(user_id) from purchaseinvoice_mast where user_id = @user_id
+			select count(user_id) as cnt from purchaseinvoice_mast where user_id = @user_id
 			union all			
-			select count(user_id) from PurchaseInvoice_Details where user_id = @user_id
+			select count(user_id) as cnt from PurchaseInvoice_Details where user_id = @user_id
 			union all			
-            select count(user_id) from trans_type_mast where user_id = @user_id
+            select count(user_id) as cnt from trans_type_mast where user_id = @user_id
 			union all			
-			select count(user_id) from dailyconsumption_mast where user_id = @user_id
+			select count(user_id) as cnt from dailyconsumption_mast where user_id = @user_id
 			union all			
-			select count(user_id) from employee_desg_mast where user_id = @user_id
+			select count(user_id) as cnt from employee_desg_mast where user_id = @user_id
 			union all			
-			select count(user_id) from employee_mast where user_id = @user_id
+			select count(user_id) as cnt from employee_mast where user_id = @user_id
 			union all			
-			select count(user_id) from leavetype_mast where user_id = @user_id
+			select count(user_id) as cnt from leavetype_mast where user_id = @user_id
 			union all
-            select count(user_id) from emp_leave_mast where user_id = @user_id
+            select count(user_id) as cnt from emp_leave_mast where user_id = @user_id
 			union all			
-			select count(user_id) from employee_payslip where user_id = @user_id
+			select count(user_id) as cnt from employee_payslip where user_id = @user_id
 			union all			
-			select count(user_id) from payment_mast where user_id = @user_id
+			select count(user_id) as cnt from payment_mast where user_id = @user_id
 			union all
-			select count(user_id) from payment_details where user_id = @user_id
+			select count(user_id) as cnt from payment_details where user_id = @user_id
 			union all			
-			select count(user_id) from country_mast where user_id = @user_id
+			select count(user_id) as cnt from country_mast where user_id = @user_id
 			union all			
-            select count(user_id) from state_mast where user_id = @user_id
+            select count(user_id) as cnt from state_mast where user_id = @user_id
 			union all			
-			select count(user_id) from city_Mast where user_id = @user_id
+			select count(user_id) as cnt from city_Mast where user_id = @user_id
 			union all			
-			select count(user_id) from month_mast where user_id = @user_id
+			select count(user_id) as cnt from month_mast where user_id = @user_id
 			union all			
-			select count(user_id) from fin_year_mast where user_id = @user_id
+			select count(user_id) as cnt from fin_year_mast where user_id = @user_id
 			union all			
-			select count(user_id) from emp_calenderdays where user_id = @user_id		
-		);
+			select count(user_id) as cnt from emp_calenderdays where user_id = @user_id		
+		) as rec_count);
 		
 		if @rec_count > 0
 			begin

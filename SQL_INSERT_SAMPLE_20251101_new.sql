@@ -26,46 +26,51 @@ select * from state_mast;
 
 INSERT INTO city_Mast(city_name, state_id, created_date, updated_date, user_id)
 VALUES
-('Mumbai', 3, GETDATE(), NULL, NULL),
-('Los Angeles', 4, GETDATE(), NULL, NULL);
+('Mumbai', 1, GETDATE(), NULL, NULL),
+('Los Angeles', 2, GETDATE(), NULL, NULL);
+
+--DBCC CHECKIDENT ('city_Mast', RESEED, 0);
+
 
 select * from city_Mast;
 -----------------------------------------------------------------------------------------------------------
 
 EXEC sp_company_mast_ins_upd_del 'insert',0,'COMP001', 'Dhara PVD Decor Pvt Ltd', 'DPVD', 'Private Limited', 
 'Manufacturer of decorative coatings', 'CIN12345XYZ', 'GSTIN1234ABC', 'PAN1234XYZ', 'Anand Ayyanagoudar', 
-'anand@dhara.com', '9876543210', 'Plot No.12, Industrial Area', 'Phase 2', 2, '560001', 1, NULL, NULL, 
+'anand@dhara.com', '9876543210', 'Plot No.12, Industrial Area', 'Phase 2', 1, '560001', 1, NULL, NULL, 
 '/images/logo1.png', 1;
 
 EXEC sp_company_mast_ins_upd_del 'insert',0,'COMP002', 'Sai Enterprises', 'SAI', 'Proprietorship', 
 'Trading and logistics firm', 'CIN67890PQR', 'GSTIN5678DEF', 'PAN5678DEF', 'Rohit Kumar', 
-'rohit@sai.com', '9988776655', 'Main Road', 'Opposite City Mall', 2, '110002', 1,NULL, NULL, 
+'rohit@sai.com', '9988776655', 'Main Road', 'Opposite City Mall', 1, '110002', 1,NULL, NULL, 
 '/images/logo2.png', 1;
 
 EXEC sp_company_mast_ins_upd_del 'insert',0,'COMP003', 'Bright Tech Solutions', 'BTS', 'Partnership', 
 'IT and software solutions provider', 'CIN11223LMN', 'GSTIN1122LMN', 'PAN1122LMN', 'Mary Smith', 
-'mary@brighttech.com', '9123456780', 'Tech Park', 'Tower B, Level 3', 3, '400001', 1,NULL, NULL, 
+'mary@brighttech.com', '9123456780', 'Tech Park', 'Tower B, Level 3', 2, '400001', 1,NULL, NULL, 
 '/images/logo3.png', 1;
 
 EXEC sp_company_mast_ins_upd_del 'insert',0,'COMP004', 'Green Agro Farms', 'GAF', 'LLP', 
 'Agricultural and organic product exporter', 'CIN99887OPQ', 'GSTIN9988OPQ', 'PAN9988OPQ', 'John Doe', 
-'john@greenagro.com', '9012345678', 'Farm Road', 'Sector 7', 3, '380015', 1, NULL, NULL, 
+'john@greenagro.com', '9012345678', 'Farm Road', 'Sector 7', 2, '380015', 1, NULL, NULL, 
 '/images/logo4.png', 1;
 
 EXEC sp_company_mast_ins_upd_del 'insert',0,'COMP005', 'UrbanBuild Constructions', 'UBC', 'Private Limited', 
 'Residential and commercial builders', 'CIN77665RST', 'GSTIN7766RST', 'PAN7766RST', 'Priya Verma', 
-'priya@urbanbuild.com', '9876501234', 'Plot 21, Skyline Road', 'Near Metro Station', 3, '600089', 1, NULL, NULL, 
+'priya@urbanbuild.com', '9876501234', 'Plot 21, Skyline Road', 'Near Metro Station', 2, '600089', 1, NULL, NULL, 
 '/images/logo5.png', 1;
 
+select * from city_Mast;
 select * from company_mast;
 ----------------------------------------------------------------------------------------------------------
 
-EXEC sp_user_details_ins_upd_del 'insert', 0, 1, 6, 1, NULL, NULL, 1;
-EXEC sp_user_details_ins_upd_del 'insert', 0, 2, 7, 1, NULL, NULL, 1;
-EXEC sp_user_details_ins_upd_del 'insert', 0, 3, 8, 1, NULL, NULL, 1;
-EXEC sp_user_details_ins_upd_del 'insert', 0, 4, 9, 1, NULL, NULL, 1;
-EXEC sp_user_details_ins_upd_del 'insert', 0, 5, 10, 0, NULL, NULL, 1;
+EXEC sp_user_details_ins_upd_del 'insert', 0, 1, 1, 1, NULL, NULL, 1;
+EXEC sp_user_details_ins_upd_del 'insert', 0, 2, 2, 1, NULL, NULL, 1;
+EXEC sp_user_details_ins_upd_del 'insert', 0, 3, 3, 1, NULL, NULL, 1;
+EXEC sp_user_details_ins_upd_del 'insert', 0, 4, 4, 1, NULL, NULL, 1;
+EXEC sp_user_details_ins_upd_del 'insert', 0, 5, 5, 0, NULL, NULL, 1;
 
+select * from company_mast;
 select * from user_details;
 
 ----------------------------------------------------------------------------------------------------------
@@ -140,32 +145,32 @@ EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Priya Verma', 'Ms.', 'Female', '
 '45 Residency Road, Bengaluru', 'priya.verma@email.com', '1995-09-20', '234567890123', 'KA09DL234567890', 
 'FGHIJ5678K', 'GSTIN5678LMN', 1, 'Prefers online orders', NULL, NULL, 1;
 
-EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Amit Patel', 'Mr.', 'Male', '9988776655', 3, 
+EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Amit Patel', 'Mr.', 'Male', '9988776655', 1, 
 '22 Ring Road, Ahmedabad', 'amit.patel@email.com', '1988-02-10', '345678901234', 'GJ01DL345678901', 
 'KLMNO9012P', 'GSTIN9012PQR', 1, 'Frequent buyer', NULL, NULL, 2;
 
-EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Sneha Rao', 'Mrs.', 'Female', '9000012345', 3, 
+EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Sneha Rao', 'Mrs.', 'Female', '9000012345', 1, 
 '5th Cross, Indiranagar, Bengaluru', 'sneha.rao@email.com', '1992-07-05', '456789012345', 'KA03DL456789012', 
 'PQRST3456L', 'GSTIN3456DEF', 0, 'Inactive since 2023', NULL, NULL, 2;
 
-EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Arjun Mehta', 'Mr.', 'Male', '9823456701', 3, 
+EXEC sp_customer_mast_ins_upd_del 'insert', 0, 'Arjun Mehta', 'Mr.', 'Male', '9823456701', 1, 
 'Plot 9, Andheri East, Mumbai', 'arjun.mehta@email.com', '1993-11-22', '567890123456', 'MH02DL567890123', 
 'UVWXY6789M', 'GSTIN6789ABC', 1, 'Bulk orders monthly', NULL, NULL, 1;
 
-
+select *from city_mast;
 select * from customer_mast;
 
 -----------------------------------------------------------------------------------------------------------
 
-EXEC sp_product_mast_ins_upd_del 'insert', 0, 6, 6, 1, 1, 'Stainless Steel Handle', 'High quality steel door handle', 150.00, 50.00, 20.00, 10.00, 2.00, 0.00, 10.00,'Reorder when stock falls below 10',NULL, NULL, 1;
+EXEC sp_product_mast_ins_upd_del 'insert', 0, 1, 1, 1, 1, 'Stainless Steel Handle', 'High quality steel door handle', 150.00, 50.00, 20.00, 10.00, 2.00, 0.00, 10.00,'Reorder when stock falls below 10',NULL, NULL, 1;
 
-EXEC sp_product_mast_ins_upd_del 'insert', 0, 7, 7, 2, 2, 'Aluminium Curtain Rod', 'Durable aluminium rod for curtains', 320.00, 40.00, 10.00, 8.00, 1.00, 0.00, 8.00, 'Reorder threshold 8 pcs', NULL, NULL, 1;
+EXEC sp_product_mast_ins_upd_del 'insert', 0, 2, 3, 2, 2, 'Aluminium Curtain Rod', 'Durable aluminium rod for curtains', 320.00, 40.00, 10.00, 8.00, 1.00, 0.00, 8.00, 'Reorder threshold 8 pcs', NULL, NULL, 1;
 
-EXEC sp_product_mast_ins_upd_del 'insert', 0, 8, 8, 3, 3, 'Glass Door Knob', 'Round crystal door knob for interiors', 450.00, 30.00, 15.00, 10.00, 2.00, 0.00, 5.00, 'Maintain 5 pcs minimum', NULL, NULL, 2;
+EXEC sp_product_mast_ins_upd_del 'insert', 0, 3, 3, 3, 3, 'Glass Door Knob', 'Round crystal door knob for interiors', 450.00, 30.00, 15.00, 10.00, 2.00, 0.00, 5.00, 'Maintain 5 pcs minimum', NULL, NULL, 2;
 
-EXEC sp_product_mast_ins_upd_del 'insert', 0, 9, 9, 4, 4, 'Wooden Hanger Set', 'Polished wooden hangers for clothing racks', 200.00, 60.00, 25.00, 15.00, 3.00, 0.00, 15.00, 'Reorder if below 15 pcs', NULL, NULL, 2;
+EXEC sp_product_mast_ins_upd_del 'insert', 0, 4, 4, 4, 4, 'Wooden Hanger Set', 'Polished wooden hangers for clothing racks', 200.00, 60.00, 25.00, 15.00, 3.00, 0.00, 15.00, 'Reorder if below 15 pcs', NULL, NULL, 2;
 
-EXEC sp_product_mast_ins_upd_del 'insert', 0, 10, 10, 5, 5, 'PVC Pipe Connector', 'PVC fitting for plumbing applications', 95.00, 100.00, 40.00, 30.00, 5.00,  0.00, 20.00, 'Minimum 20 pcs required', NULL, NULL, 1;
+EXEC sp_product_mast_ins_upd_del 'insert', 0, 5, 5, 5, 5, 'PVC Pipe Connector', 'PVC fitting for plumbing applications', 95.00, 100.00, 40.00, 30.00, 5.00,  0.00, 20.00, 'Minimum 20 pcs required', NULL, NULL, 1;
 
 
 select * from product_mast;
@@ -176,35 +181,35 @@ select * from unit_mast;
 
 -----------------------------------------------------------------------------------------------------------
 
-EXEC sp_inward_mast_ins_upd_del 'insert', 0, 1, 22, 150.00, 1, 'Received full quantity', NULL, 6, NULL, NULL, 1;
+EXEC sp_inward_mast_ins_upd_del 'insert', 0, 1, 1, 150.00, 150.00, 1, 'Received full quantity', NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_inward_mast_ins_upd_del 'insert', 0, 2, 23, 75.00, 1, 'Partial inward completed', NULL, 7, NULL, NULL, 2;
+EXEC sp_inward_mast_ins_upd_del 'insert', 0, 2, 2, 75.00, 75.00, 1, 'Partial inward completed', NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_inward_mast_ins_upd_del 'insert', 0, 3, 24, 200.00, 0, 'Pending inspection', NULL, 8, NULL, NULL, 1;
+EXEC sp_inward_mast_ins_upd_del 'insert', 0, 3, 3, 200.00, 200.00, 0, 'Pending inspection', NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_inward_mast_ins_upd_del 'insert', 0, 4, 25, 95.00, 1, 'Verified and stored', NULL, 9, NULL, NULL, 2;
+EXEC sp_inward_mast_ins_upd_del 'insert', 0, 4, 4, 95.00, 95.00, 1, 'Verified and stored', NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_inward_mast_ins_upd_del 'insert', 0, 5, 26, 120.00, 0, 'Awaiting approval', NULL, 10, NULL, NULL, 1;
+EXEC sp_inward_mast_ins_upd_del 'insert', 0, 5, 5, 120.00, 120.00, 0, 'Awaiting approval', NULL, NULL, NULL, NULL, 1;
 
+
+--DBCC CHECKIDENT ('inward_mast', RESEED, 0);
 
 select * from inward_mast;
 select * from customer_mast;
 select * from product_mast;
 select* from company_mast;
 
-
-
 ----------------------------------
 
-EXEC sp_inward_return_ins_upd_del 'insert', 0, 6, 1, 22, 5.00, 'Damaged during delivery', NULL, NULL, NULL, NULL, 1;
+EXEC sp_inward_return_ins_upd_del 'insert', 0, 1, 1, 1, 5.00, 'Damaged during delivery', NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_inward_return_ins_upd_del 'insert', 0, 7, 2, 23, 2.50, 'Wrong product received', NULL, NULL, NULL, NULL, 2;
+EXEC sp_inward_return_ins_upd_del 'insert', 0, 2, 2, 2, 2.50, 'Wrong product received', NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_inward_return_ins_upd_del 'insert', 0, 8, 3, 24, 10.00, 'Quality issue reported', NULL, NULL, NULL, NULL, 1;
+EXEC sp_inward_return_ins_upd_del 'insert', 0, 3, 3, 3, 10.00, 'Quality issue reported', NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_inward_return_ins_upd_del 'insert', 0, 9, 4, 25, 3.00, 'Excess stock returned', NULL, NULL, NULL, NULL, 2;
+EXEC sp_inward_return_ins_upd_del 'insert', 0, 4, 4, 4, 3.00, 'Excess stock returned', NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_inward_return_ins_upd_del 'insert', 0, 10, 5, 26, 1.00, 'Customer cancelled order', NULL, NULL, NULL, NULL, 1;
+EXEC sp_inward_return_ins_upd_del 'insert', 0, 5, 5, 5, 1.00, 'Customer cancelled order', NULL, NULL, NULL, NULL, 1;
 
 
 select * from inward_return;
@@ -221,6 +226,8 @@ EXEC sp_salesinvoice_mast_ins_upd_del 'insert', 0, 'INV', '004', 1, null, 14500.
 
 EXEC sp_salesinvoice_mast_ins_upd_del 'insert', 0, 'INV', '005', 4, null, 22000.00, 1980.00, 1980.00, 0.00, 400.00, -0.50, 25459.50, 0, 1, null, null, null, NULL, 1;
 
+EXEC sp_salesinvoice_mast_ins_upd_del 'insert', 0, 'INV', '005', 5, null, 0, 0, 0, 0, 0, 0, 0, 0, 1, null, null, null, null, 1;
+
 
 select * from salesinvoice_mast;
 select * from customer_mast;
@@ -228,32 +235,52 @@ select * from customer_mast;
 -----------------------------------------------------------------------
 
 
-EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 6, 6, 22, 1, 1, 12.00, 8.00, 0.00, 25.00, 0.00, 96.00, 250.00, 10.00, 2500.00, 9.00, 225.00, 9.00, 225.00, 0.00, 0.00, 5.00, 125.00, 2825.00, NULL, NULL, NULL, NULL, 1;
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 1, 1, 1, 1, 1, 12.00, 8.00, 0.00, 25.00, 0.00, 96.00, 250.00, 10.00, 2500.00, 9.00, 225.00, 9.00, 225.00, 0.00, 0.00, 5.00, 125.00, 2825.00, NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 7, 7, 23, 2, 1, 10.00, 5.00, 0.00, 15.00, 0.00, 50.00, 300.00, 8.00, 2400.00, 9.00, 216.00, 9.00, 216.00, 0.00, 0.00, 2.50, 60.00, 2772.00, NULL, NULL, NULL, NULL, 2;
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 2, 2, 2, 2, 1, 10.00, 5.00, 0.00, 15.00, 0.00, 50.00, 300.00, 8.00, 2400.00, 9.00, 216.00, 9.00, 216.00, 0.00, 0.00, 2.50, 60.00, 2772.00, NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 8, 8, 24, 3, 2, 15.00, 10.00, 0.00, 30.00, 0.00, 150.00, 200.00, 12.00, 2400.00, 9.00, 216.00, 9.00, 216.00, 0.00, 0.00, 4.00, 96.00, 2832.00, NULL, NULL, NULL, NULL, 1;
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 3, 3, 3, 3, 2, 15.00, 10.00, 0.00, 30.00, 0.00, 150.00, 200.00, 12.00, 2400.00, 9.00, 216.00, 9.00, 216.00, 0.00, 0.00, 4.00, 96.00, 2832.00, NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 9, 9, 25, 4, 2, 20.00, 8.00, 0.00, 35.00, 0.00, 160.00, 350.00, 6.00, 2100.00, 9.00, 189.00, 9.00, 189.00, 0.00, 0.00, 3.00, 63.00, 2515.00, NULL, NULL, NULL, NULL, 2;
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 4, 4, 4, 4, 2, 20.00, 8.00, 0.00, 35.00, 0.00, 160.00, 350.00, 6.00, 2100.00, 9.00, 189.00, 9.00, 189.00, 0.00, 0.00, 3.00, 63.00, 2515.00, NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 10, 10, 26, 5, 3, 25.00, 12.00, 0.00, 50.00, 0.00, 300.00, 275.00, 5.00, 1375.00, 9.00, 123.75, 9.00, 123.75, 0.00, 0.00, 2.00, 27.50, 1650.00, NULL, NULL, NULL, NULL, 1;
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 5, 5, 5, 5, 3, 25.00, 12.00, 0.00, 50.00, 0.00, 300.00, 275.00, 5.00, 1375.00, 9.00, 123.75, 9.00, 123.75, 0.00, 0.00, 2.00, 27.50, 1650.00, NULL, NULL, NULL, NULL, 1;
+
+-------
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 6, 5, 5, 5, 3, 25.00, 12.00, 0.00, 50.00, 0.00, 300.00, 275.00, 5.00, 1375.00, 9.00, 123.75, 9.00, 123.75, 0.00, 0.00, 2.00, 27.50, 1650.00, NULL, NULL, NULL, NULL, 1;
+
+EXEC sp_salesinvoicedetails_ins_upd_del 'insert', 0, 6, 5, 5, 5, 3, 25.00, 12.00, 0.00, 50.00, 0.00, 300.00, 275.00, 5.00, 1375.00, 9.00, 123.75, 9.00, 123.75, 0.00, 0.00, 2.00, 27.50, 1650.00, NULL, NULL, NULL, NULL, 1;
+
+EXEC sp_salesinvoicedetails_ins_upd_del 'delete', 9,6; 
 
 
-select * from salesinvoicedetails;
+--update salesinvoice_mast
+--set 
+--	gross_total = 0,
+--	sgst_total  = 0,
+--	cgst_total  = 0,
+--	igst_total  = 0,
+--	discount_total = 0,
+--	net_total   = 0
+--where sales_id = 6;
+
+
 select * from salesinvoice_mast;
+select * from salesinvoicedetails;
 select * from inward_mast;
 select * from product_mast;
 select * from colour_mast;
 select * from unit_mast;
 
+select *from errorlog
+
 -----------------------------------------------------------------------
 
 
-EXEC sp_challan_mast_ins_upd_del 'insert',0, 6, NULL, NULL, NULL, NULL, 1;
-EXEC sp_challan_mast_ins_upd_del 'insert',0, 7, NULL, NULL, NULL, NULL, 2;
-EXEC sp_challan_mast_ins_upd_del 'insert',0, 8, NULL, NULL, NULL, NULL, 1;
-EXEC sp_challan_mast_ins_upd_del 'insert',0, 9, NULL, NULL, NULL, NULL, 2;
-EXEC sp_challan_mast_ins_upd_del 'insert',0, 10, NULL, NULL, NULL, NULL, 1;
+EXEC sp_challan_mast_ins_upd_del 'insert',0, 1, NULL, NULL, NULL, NULL, 1;
+EXEC sp_challan_mast_ins_upd_del 'insert',0, 2, NULL, NULL, NULL, NULL, 2;
+EXEC sp_challan_mast_ins_upd_del 'insert',0, 3, NULL, NULL, NULL, NULL, 1;
+EXEC sp_challan_mast_ins_upd_del 'insert',0, 4, NULL, NULL, NULL, NULL, 2;
+EXEC sp_challan_mast_ins_upd_del 'insert',0, 5, NULL, NULL, NULL, NULL, 1;
 
 select * from challan_mast
 select * from salesinvoice_mast
@@ -262,15 +289,15 @@ select * from salesinvoice_mast
 -----------------------------------------------------------------------
 
 
-EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 6, NULL, 29000.50, 0.00, 1, NULL, NULL, NULL, NULL, 1;
+EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 1, NULL, 29000.50, 0.00, 1, NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 7, NULL, 20500.75, 500.00, 1, NULL, NULL, NULL, NULL, 2;
+EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 2, NULL, 20500.75, 500.00, 1, NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 8, NULL, 37560.25, 1500.00, 0, NULL, NULL, NULL, NULL, 1;
+EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 3, NULL, 37560.25, 1500.00, 0, NULL, NULL, NULL, NULL, 1;
 
-EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 9, NULL, 16110.75, 0.00, 1, NULL, NULL, NULL, NULL, 2;
+EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 4, NULL, 16110.75, 0.00, 1, NULL, NULL, NULL, NULL, 2;
 
-EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 10, NULL, 25459.50, 25459.50, 0, NULL, NULL, NULL, NULL, 1;
+EXEC sp_receipt_mast_ins_upd_del 'insert', 0, 5, NULL, 25459.50, 25459.50, 0, NULL, NULL, NULL, NULL, 1;
 
 
 select * from receipt_mast;
@@ -278,20 +305,20 @@ select * from salesinvoice_mast
 -----------------------------------------------------------------------
 
 
--- 1. Payment via Cheque
-EXEC sp_receipt_details_ins_upd_del 'insert', 0, 1, 10, 15000.00, '458976', 'HDFC Bank', 'HDFC0001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1;
+-- Payment via Cheque
+EXEC sp_receipt_details_ins_upd_del 'insert', 0, 1, 5, 15000.00, '458976', 'HDFC Bank', 'HDFC0001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1;
 
--- 2. Payment via Online Transfer (Transaction ID)
-EXEC sp_receipt_details_ins_upd_del 'insert', 0, 2, 8, 20500.75, NULL, NULL, NULL, NULL, '9876543210123456', 'TXN2025110101', NULL, NULL, NULL, NULL, NULL, NULL, 2;
+-- Payment via Online Transfer (Transaction ID)
+EXEC sp_receipt_details_ins_upd_del 'insert', 0, 2, 3, 20500.75, NULL, NULL, NULL, NULL, '9876543210123456', 'TXN2025110101', NULL, NULL, NULL, NULL, NULL, NULL, 2;
 
--- 3. Payment via Credit Card
-EXEC sp_receipt_details_ins_upd_del 'insert', 0, 3, 7, 12560.25, NULL, NULL, NULL, NULL, NULL, 'TXN2025110102', '6589', NULL, NULL, NULL, NULL, NULL, 1;
+-- Payment via Credit Card
+EXEC sp_receipt_details_ins_upd_del 'insert', 0, 3, 2, 12560.25, NULL, NULL, NULL, NULL, NULL, 'TXN2025110102', '6589', NULL, NULL, NULL, NULL, NULL, 1;
 
--- 4. Payment via Cheque (Different Bank)
-EXEC sp_receipt_details_ins_upd_del 'insert', 0, 4, 10, 9500.00, '789654', 'ICICI Bank', 'ICIC0005', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2;
+-- Payment via Cheque (Different Bank)
+EXEC sp_receipt_details_ins_upd_del 'insert', 0, 4, 5, 9500.00, '789654', 'ICICI Bank', 'ICIC0005', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2;
 
--- 5. Payment via UPI Transaction
-EXEC sp_receipt_details_ins_upd_del 'insert', 0, 5, 8, 17500.00, NULL, NULL, NULL, NULL, NULL, 'UPI2025110103', NULL, NULL, NULL, NULL, NULL, NULL, 1;
+-- Payment via UPI Transaction
+EXEC sp_receipt_details_ins_upd_del 'insert', 0, 5, 3, 17500.00, NULL, NULL, NULL, NULL, NULL, 'UPI2025110103', NULL, NULL, NULL, NULL, NULL, NULL, 1;
 
 
 select * from receipt_details;
@@ -301,6 +328,22 @@ select * from paytype_mast;
 -----------------------------------------------------------------------
 
 select * from errorlog;
+
+select* from customer_mast;
+select* from inward_mast;
+select* from inward_return;
+select* from product_mast;
+select * from salesinvoice_mast;
+select * from salesinvoicedetails;
+
+SELECT 
+*
+FROM sys.computed_columns
+
+
+
+select current_stock from product_mast;
+select* from user_details;
 
 
 

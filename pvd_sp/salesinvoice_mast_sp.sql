@@ -57,13 +57,16 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
+
 		set @rec_count = ( 
-            select count(sales_id) from salesinvoicedetails where sales_id = @sales_id 
+		select sum(cnt)
+			from (
+            select count(sales_id) as cnt  from salesinvoicedetails where sales_id = @sales_id 
 			union all
-            select count(sales_id) from challan_mast where sales_id = @sales_id
+            select count(sales_id) as cnt  from challan_mast where sales_id = @sales_id
 			union all
-            select count(sales_id) from receipt_mast where sales_id = @sales_id
-		);
+            select count(sales_id) as cnt  from receipt_mast where sales_id = @sales_id
+		) as recount);
 		
 		if @rec_count > 0
 		begin

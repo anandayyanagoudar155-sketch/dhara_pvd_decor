@@ -45,15 +45,16 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = ( 
-            select count(unit_id) from product_mast where unit_id = @unit_id
+		set @rec_count = ( select sum(cnt)
+			from (
+            select count(unit_id) as cnt from product_mast where unit_id = @unit_id
 			union all
-            select count(unit_id) from salesinvoicedetails where unit_id = @unit_id
+            select count(unit_id) as cnt from salesinvoicedetails where unit_id = @unit_id
 			union all
-            select count(unit_id) from PurchaseInvoice_Details where unit_id = @unit_id
+            select count(unit_id) as cnt from PurchaseInvoice_Details where unit_id = @unit_id
 			union all
-            select count(unit_id) from dailyconsumption_mast where unit_id = @unit_id
-		);
+            select count(unit_id) as cnt from dailyconsumption_mast where unit_id = @unit_id
+		) as rec_count);
 		
 		if @rec_count > 0
 		begin

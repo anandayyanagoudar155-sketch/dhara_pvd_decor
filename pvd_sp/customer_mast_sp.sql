@@ -1,8 +1,20 @@
-create procedure sp_colour_mast_ins_upd_del(
-@action varchar(max), 
-@colour_id bigint=0,
-@colour_name varchar(50)='',
+create procedure sp_customer_mast_ins_upd_del(
+@action varchar(max),
+@customer_id bigint=0 ,
+@customer_name varchar(100)='',
+@prefix varchar(6)='',
+@gender varchar(10)='',
+@phonenumber varchar(12)='',
+@city_id bigint=0,
+@cust_address varchar(max)='',
+@email_id varchar(max)='',
+@dob date=null,
+@aadhaar_number varchar(15)='',
+@license_number varchar(18)='',
+@pan_number varchar(12)='',
+@gst_number varchar(25)='',
 @is_active bit=0,
+@customer_notes varchar(50)='',
 @created_date date=null,
 @updated_date date=null,
 @user_id bigint=0
@@ -16,8 +28,8 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			insert into colour_mast(colour_name,is_active,created_date,updated_date,user_id)
-			values(@colour_name,@is_active,@created_date,@updated_date,@user_id)
+			insert into customer_mast(customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,user_id)
+			values(@customer_name,@prefix,@gender,@phonenumber,@city_id,@cust_address,@email_id,@dob,@aadhaar_number,@license_number,@pan_number,@gst_number,@is_active,@customer_notes,@created_date,@updated_date,@user_id)
 		commit transaction;
 	end try
 		begin catch
@@ -44,11 +56,14 @@ begin
 		declare @rec_count bigint
 	begin try
 		begin transaction;
-		set @rec_count = ( 
-            select count(colour_id) from PurchaseInvoice_Details where colour_id = @colour_id
-			union all
-            select count(colour_id) from salesinvoicedetails where colour_id = @colour_id 
-		);
+		set @rec_count = ( select sum(cnt)
+				from (
+                select count(customer_id) as cnt  from inward_mast where customer_id = @customer_id
+				union all
+                select count(customer_id) as cnt from inward_return where customer_id = @customer_id
+				union all
+                select count(customer_id) as cnt from salesinvoice_mast where customer_id = @customer_id
+		)as rec_count);
 		
 		if @rec_count > 0
 		begin
@@ -56,7 +71,7 @@ begin
 			return;
 		end
 
-		delete from colour_mast where colour_id=@colour_id;
+		delete from customer_mast where customer_id=@customer_id
 		commit transaction;
 	
 	end try
@@ -83,14 +98,25 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			update colour_mast 
-			set 
-			colour_name =@colour_name,
+			update customer_mast 
+			set customer_name=@customer_name,
+			prefix=@prefix,
+			gender=@gender,
+			phonenumber=@phonenumber,
+			city_id=@city_id,
+			cust_address=@cust_address,
+			email_id=@email_id,
+			dob=@dob,
+			aadhaar_number=@aadhaar_number,
+			license_number=@license_number,
+			pan_number=@pan_number,
+			gst_number=@gst_number,
 			is_active=@is_active,
+			customer_notes=@customer_notes,
 			created_date=@created_date,
 			updated_date=@updated_date,
 			user_id=@user_id
-				where colour_id=@colour_id
+				where customer_id=@customer_id
 				
 			if @@ROWCOUNT = 0
 			begin
@@ -122,7 +148,27 @@ end
 if @action='selectall'
 begin
 	begin try
-		select colour_id,colour_name,is_active,created_date,updated_date,user_id from colour_mast;
+		select 
+		a.customer_id,
+		a.customer_name,
+		a.prefix,
+		a.gender,
+		a.phonenumber,
+		b.city_name,
+		a.cust_address,
+		a.email_id,
+		a.dob,
+		a.aadhaar_number,
+		a.license_number,pan_number,
+		a.gst_number,
+		a.is_active,
+		a.customer_notes,
+		a.created_date,
+		a.updated_date,
+		a.user_id 
+		from customer_mast a
+		inner join city_mast b on a.city_id=b.city_id;
+		
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -142,7 +188,7 @@ end
 if @action='selectone'
 begin
 		begin try
-			select colour_id,colour_name,is_active,created_date,updated_date,user_id from colour_mast where colour_id=@colour_id;
+			select customer_id,customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,user_id from customer_mast where customer_id=@customer_id
 		end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -160,10 +206,10 @@ end
 	
 	
 
-if @action = 'colourlist'
+if @action = 'customerlist'
 begin
 	begin try
-		select colour_id,colour_name from colour_mast;
+		select customer_id,customer_name from customer_mast
 	end try
 	begin catch
 		
