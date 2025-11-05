@@ -1,35 +1,63 @@
 USE [DharaPvdDecor_db]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_country_mast_ins_upd_del]    Script Date: 11/5/2025 4:57:16 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_state_mast_ins_upd_del]    Script Date: 11/5/2025 2:50:46 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER procedure [dbo].[sp_country_mast_ins_upd_del](
+create procedure [dbo].[sp_state_mast_ins_upd_del](
 @action varchar(max) = '',
+@state_id bigint = 0,
+@state_name varchar(100) = '',
 @country_id bigint = 0,
-@country_name varchar(100) = '',
 @created_date date = null,
 @updated_date date = null,
 @user_id bigint = 0
 )
 as
 Begin
+
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
 
-	if @action = 'insert'
+if @action = 'insert'
 	begin
 		begin try
 			begin transaction
-			insert into country_mast(country_name,created_date,updated_date,user_id)
-			values(@country_name,@created_date,@updated_date,@user_id);
+			insert into state_mast(state_name,country_id,created_date,updated_date,user_id)
+			values(@state_name,@country_id,@created_date,@updated_date,@user_id);
 			commit transaction;
 		end try
 		begin catch
 			IF XACT_STATE() <> 0
 			rollback transaction;
 
+			set @errornumber = ERROR_NUMBER();
+			set @errorprocedure = ERROR_PROCEDURE();
+			set @errorline = ERROR_LINE();
+			set @errormessage = ERROR_MESSAGE();
+
+			exec errorlog_ins 
+				 @errornumber,
+				 @errorprocedure,
+				 @errorline,
+				 @errormessage;
+				 
+			THROW;
+		end catch
+	end
+
+
+
+	if @action = 'selectall'
+	begin
+		begin try
+			select sm.state_id,sm.state_name,cm.country_name,sm.created_date,sm.updated_date,um.user_name 
+			from state_mast sm
+			left join country_mast cm on sm.country_id = cm.country_id
+			left join user_mast um on sm.user_id=um.user_id;	
+		end try
+		begin catch
 			set @errornumber = ERROR_NUMBER();
 			set @errorprocedure = ERROR_PROCEDURE();
 			set @errorline = ERROR_LINE();
@@ -47,39 +75,12 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 
 
 
-
-	if @action = 'selectall'
-	begin
-		begin try
-			select cm.country_id,cm.country_name,cm.created_date,cm.updated_date,um.user_name 
-			from country_mast cm
-			left join user_mast um on cm.user_id=um.user_id;	
-		end try
-		begin catch
-			set @errornumber = ERROR_NUMBER();
-			set @errorprocedure = ERROR_PROCEDURE();
-			set @errorline = ERROR_LINE();
-			set @errormessage = ERROR_MESSAGE();
-
-			exec errorlog_ins 
-				 @errornumber,
-				 @errorprocedure,
-				 @errorline,
-				 @errormessage;
-
-			THROW;
-		end catch
-	end
-
-
-
-
 	if @action = 'selectone'
 	begin
 		begin try
-			select country_id,country_name,created_date,updated_date,user_id
-			from country_mast 
-			where country_id=@country_id;
+			select state_id,state_name,country_id,created_date,updated_date,user_id 
+			from state_mast sm
+			where sm.state_id=@state_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -91,35 +92,34 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				 @errornumber,
 				 @errorprocedure,
 				 @errorline,
-				 @errormessage;
+				 @errormessage;	
 
 			THROW;
 		end catch
 	end
-
 
 
 
 	if @action = 'delete'
 	begin
-		declare @rec_count bigint = 0
+		declare @rec_count bigint = 0;
 		begin try
 			begin transaction;
 			set @rec_count =(
 								Select sum(cnt) from 
 								(
-									select COUNT(country_id) as cnt from state_mast where country_id=@country_id
+									select COUNT(city_Id) as cnt from city_Mast where state_Id=@state_id
 								) as rec_count
 							);
 
 			if @rec_count>0
 			begin
 				rollback transaction;
-				 RAISERROR('Cannot delete: This record is linked with other tables.', 16, 1);
+				RAISERROR('Cannot delete: This record is linked with other tables.', 16, 1);
 				return;
 			end
 
-			delete from country_mast where country_id = @country_id;
+			delete from state_mast where state_id = @state_id;
 			commit transaction;
 		end try
 		begin catch
@@ -136,11 +136,10 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				 @errorprocedure,
 				 @errorline,
 				 @errormessage;	
-
-			THROW;				 		
+			
+            THROW;
 		end catch
 	end
-
 
 
 
@@ -148,12 +147,11 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			update country_mast
-			set country_name=@country_name,
-			created_date=@created_date,
-			updated_date=@updated_date,
-			user_id=@user_id
-			where country_id = @country_id;
+			update state_mast
+			set state_name=@state_name,
+				country_id=@country_id,
+				updated_date=@updated_date
+			where state_id = @state_id;
 
 			if @@ROWCOUNT = 0
 			begin
@@ -176,18 +174,18 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				 @errornumber,
 				 @errorprocedure,
 				 @errorline,
-				 @errormessage;	
+				 @errormessage;
 				 
-			THROW;		
+			THROW;
 		end catch
 	end
 
 
 
-	if @action = 'countrylist'
+	if @action = 'state_mastlist'
 	begin
 		begin try
-			select country_id,country_name from country_mast;
+			select state_id,state_name from state_mast;
 		end try
 		begin catch
 			
@@ -200,10 +198,9 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				 @errornumber,
 				 @errorprocedure,
 				 @errorline,
-				 @errormessage;
-				 
-			THROW;			
+				 @errormessage;	
+			
+			THROW;
 		end catch
 	end
-
-End
+End 
