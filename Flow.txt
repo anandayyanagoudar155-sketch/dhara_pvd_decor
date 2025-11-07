@@ -1,0 +1,116 @@
+--------------------------------------------
+---------------------------------------------
+
+###Customer Entry
+-Register customer details such as name, contact, address, GST number, etc.
+
+###Product Received from Customer
+-Customer sends product(s) in specific quantities.
+-Generate an Inward Entry with a unique Inward ID.
+
+###Product Existence Check
+If the product already exists in the product list → go to Step 4.
+If the product does not exist → add the product to the system and create related entries such as HSN details, units, product type (product), and brand.
+
+###Inward Quantity Logging
+Record the quantity, item details, and date/time for each received product.
+Update the total quantity and inward status.
+
+###Inspection / Quality Check (QC)
+Inspect the received products for quality.
+If products are damaged or not acceptable → go to Step 6A.
+If products pass QC → go to Step 7.
+
+###Inward Return Entry (Post-QC)
+For rejected items, create a return entry and send them back to the customer.
+Record the returned item details.
+
+###Service Application (Processing Stage)
+Perform the required services such as fabrication, coating, buffing, polishing, etc.
+Record details like service type, charges, time taken, and technician name.
+
+###JobWork Invoice Creation
+Generate a jobwork invoice linked to the customer and inward entry.
+
+###Service Existence Check
+If the service already exists in the product list → go to Step 10.
+If the service does not exist → add the service to the system and create related entries such as HSN details and product type (service).
+
+###Customer State Check
+If the customer’s state is the same as the company’s state → go to Step 11.
+If the customer’s state is different → go to Step 12.
+
+###Apply CGST + SGST
+Apply half of the GST rate as CGST and the other half as SGST.
+
+###Apply IGST
+Apply the full GST rate as IGST.
+
+###Add JobWork Invoice Details
+Enter base price for each item or service.
+Apply the rate or formula, add tax, subtract discounts, and calculate the final amount.
+
+###Update JobWork Invoice Header
+Add up all item totals and update the header with total amount, tax, discount, and final payable amount.
+
+###Challan Generation (Delivery Note)
+Generate a delivery challan based on the sales invoice.
+Include item details, quantities, and delivery date.
+
+###Receipt Header Creation
+Generate a receipt header linked to the sales invoice.
+
+###Payment Type Check
+If the payment type already exists → go to Step 18.
+If the payment type does not exist → create the payment type and define its details (Cash, Cheque, Bank Transfer, Card, UPI, Net Banking).
+
+###Receipt Details (Payment Entry)
+Record payment received against the sales invoice.
+Enter payment details such as mode, amount, and date.
+Update the receipt with the total amount received.
+
+###Delivery Update
+Once the product is delivered, mark delivery status as completed.
+Update stock and transaction records.
+
+###Reports and Audit
+Generate various reports such as:
+Outstanding Payments
+Returned Items
+Service Summary
+
+
+---------------------------------------------
+---------------------------------------------
+
+###User Registration
+The user fills in the required fields such as username and password.
+The user clicks Register to create an account in the system.
+
+###User Login
+The user enters their username and password.
+The system validates the credentials.
+If login is successful → user is redirected to the Home Page.
+If login fails → user is redirected back to the Login Page with an error message.
+
+###Role Check After Login
+The system checks the role of the logged-in user.
+If the user role is Admin → proceed to Step 4.
+If not Admin → user continues with normal access (no company creation permissions).
+
+###Company Creation (Admin Only)
+The Admin can create a new company by filling in the required company details (such as name, address, GST number, contact info, etc.).
+If the company already exists → skip to Step 5.
+If the company does not exist → create the new company by saving the entered details.
+
+###Assign Company Access to Users
+The Admin can assign users to specific companies.
+This means linking a user ID to the corresponding company, giving that user access to work under that company.
+
+###Access Control in System
+Once assigned, users can log in and access data or perform operations only for the companies they are linked to.
+Admin can modify or revoke these access permissions at any time
+
+
+---------------------------------------------
+---------------------------------------------
