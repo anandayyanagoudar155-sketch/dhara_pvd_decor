@@ -1,37 +1,62 @@
 USE [DharaPvdDecor_db]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_state_mast_ins_upd_del]    Script Date: 11/8/2025 5:12:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_city_mast_ins_upd_del]    Script Date: 11/8/2025 5:11:33 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER procedure [dbo].[sp_state_mast_ins_upd_del](
+
+ALTER procedure [dbo].[sp_city_mast_ins_upd_del](
 @action varchar(max) = '',
+@city_id bigint = 0,
+@city_name varchar(100) = '',
 @state_id bigint = 0,
-@state_name varchar(100) = '',
-@country_id bigint = 0,
 @created_date date = null,
 @updated_date date = null,
 @user_id bigint = 0
 )
 as
 Begin
-
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
-
 if @action = 'insert'
 	begin
 		begin try
 			begin transaction
-			insert into state_mast(state_name,country_id,created_date,updated_date,user_id)
-			values(@state_name,@country_id,@created_date,@updated_date,@user_id);
+			insert into city_mast(city_name,state_id,created_date,updated_date,user_id)
+			values(@city_name,@state_id,@created_date,@updated_date,@user_id);
 			commit transaction;
 		end try
 		begin catch
 			IF XACT_STATE() <> 0
 			rollback transaction;
 
+			set @errornumber = ERROR_NUMBER();
+			set @errorprocedure = ERROR_PROCEDURE();
+			set @errorline = ERROR_LINE();
+			set @errormessage = ERROR_MESSAGE();
+
+			exec errorlog_ins 
+				 @errornumber,
+				 @errorprocedure,
+				 @errorline,
+				 @errormessage;	
+
+			THROW;
+		end catch
+	end
+
+
+
+	if @action = 'selectall'
+	begin
+		begin try
+			select cm.city_id,cm.city_name,sm.state_name,cm.created_date,cm.updated_date,um.user_name 
+			from city_mast cm
+			left join state_mast sm on cm.state_id = sm.state_id
+			left join user_mast um on cm.user_id = um.user_id;	
+		end try
+		begin catch
 			set @errornumber = ERROR_NUMBER();
 			set @errorprocedure = ERROR_PROCEDURE();
 			set @errorline = ERROR_LINE();
@@ -49,38 +74,12 @@ if @action = 'insert'
 
 
 
-	if @action = 'selectall'
-	begin
-		begin try
-			select sm.state_id,sm.state_name,cm.country_name,sm.created_date,sm.updated_date,um.user_name 
-			from state_mast sm
-			left join country_mast cm on sm.country_id = cm.country_id
-			left join user_mast um on sm.user_id=um.user_id;	
-		end try
-		begin catch
-			set @errornumber = ERROR_NUMBER();
-			set @errorprocedure = ERROR_PROCEDURE();
-			set @errorline = ERROR_LINE();
-			set @errormessage = ERROR_MESSAGE();
-
-			exec errorlog_ins 
-				 @errornumber,
-				 @errorprocedure,
-				 @errorline,
-				 @errormessage;	
-
-			THROW;
-		end catch
-	end
-
-
-
 	if @action = 'selectone'
 	begin
 		begin try
-			select state_id,state_name,country_id,created_date,updated_date,user_id 
-			from state_mast 
-			where state_id=@state_id;
+			select cm.city_id,cm.city_name,cm.state_id,cm.created_date,cm.updated_date,cm.user_id 
+			from city_mast cm
+			where cm.city_id=@city_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -92,7 +91,7 @@ if @action = 'insert'
 				 @errornumber,
 				 @errorprocedure,
 				 @errorline,
-				 @errormessage;	
+				 @errormessage;
 
 			THROW;
 		end catch
@@ -103,14 +102,23 @@ if @action = 'insert'
 	if @action = 'delete'
 	begin
 		declare @rec_count bigint = 0;
+		set @rec_count = (Select count(city_id) from city_mast where city_id = @city_id);
+
+		if @rec_count > 0
 		begin try
 			begin transaction;
 			set @rec_count =(
-								Select sum(cnt) from 
-								(
-									select COUNT(city_Id) as cnt from city_Mast where state_Id=@state_id
-								) as rec_count
-							);
+								 Select sum(cnt) from
+								 (
+									 select COUNT(city_id) as cnt from company_mast where city_id=@city_id
+									 union all
+									 select COUNT(city_id) as cnt from customer_mast where city_id=@city_id
+									 union all
+									 select COUNT(city_id) as cnt from vendor_mast where city_id=@city_id
+									 union all
+									 select COUNT(city_id) as cnt from employee_mast where city_id=@city_id
+								 ) as rec_count
+							 );
 
 			if @rec_count>0
 			begin
@@ -119,7 +127,7 @@ if @action = 'insert'
 				return;
 			end
 
-			delete from state_mast where state_id = @state_id;
+			delete from city_mast where city_id = @city_id;
 			commit transaction;
 		end try
 		begin catch
@@ -136,8 +144,8 @@ if @action = 'insert'
 				 @errorprocedure,
 				 @errorline,
 				 @errormessage;	
-			
-            THROW;
+				 
+			THROW;
 		end catch
 	end
 
@@ -147,11 +155,13 @@ if @action = 'insert'
 	begin
 		begin try
 			begin transaction
-			update state_mast
-			set state_name=@state_name,
-				country_id=@country_id,
-				updated_date=@updated_date
-			where state_id = @state_id;
+			update city_mast
+			set city_name=@city_name,
+				state_id=@state_id,
+				created_date=@created_date,
+				updated_date=@updated_date,
+				user_id=@user_id
+			where city_id = @city_id;
 
 			if @@ROWCOUNT = 0
 			begin
@@ -182,10 +192,10 @@ if @action = 'insert'
 
 
 
-	if @action = 'state_mastlist'
+	if @action = 'citymastlist'
 	begin
 		begin try
-			select state_id,state_name from state_mast ;
+			select city_id,city_name from city_mast;
 		end try
 		begin catch
 			
@@ -198,8 +208,8 @@ if @action = 'insert'
 				 @errornumber,
 				 @errorprocedure,
 				 @errorline,
-				 @errormessage;	
-			
+				 @errormessage;
+
 			THROW;
 		end catch
 	end

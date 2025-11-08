@@ -1,4 +1,11 @@
-create procedure sp_company_mast_ins_upd_del(
+USE [DharaPvdDecor_db]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_company_mast_ins_upd_del]    Script Date: 11/8/2025 5:13:21 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER procedure [dbo].[sp_company_mast_ins_upd_del](
 @action varchar(max),
 @comp_id bigint=0,
 @comp_code varchar(25)='',
@@ -92,7 +99,9 @@ begin
 				 @ErrorNumber,
 				 @ErrorProcedure,
 				 @ErrorLine,
-				 @ErrorMessage;	
+				 @ErrorMessage;
+				 
+			THROW;
 		end catch
 end
 
@@ -139,6 +148,7 @@ begin
 		if @rec_count > 0
 		begin
 			rollback transaction;
+			RAISERROR('Cannot delete: This record is linked with other tables.', 16, 1);
 			return;
 		end
 
@@ -159,7 +169,9 @@ begin
 			@ErrorNumber,
 			@ErrorProcedure,
 			@ErrorLine,
-			@ErrorMessage			
+			@ErrorMessage;
+			
+			THROW;
 		end catch
 end
 
@@ -214,7 +226,9 @@ begin
 			@ErrorNumber,
 			@ErrorProcedure,
 			@ErrorLine,
-			@ErrorMessage			
+			@ErrorMessage;
+			
+			THROW;
 		end catch
 end
 
@@ -224,27 +238,30 @@ if @action='selectall'
 begin
 	begin try
 		select 
-		comp_id,
-		comp_code,
-		comp_name,
-		comp_short_name,
-		comp_type,
-		comp_Desc,
-		cin_number,
-		gst_number,
-		pan_number,
-		contperson_name,
-		contact_email,
-		contact_phone,
-		address_line1,
-		address_line2,
-		city_id,
-		pincode,
-		is_active,
-		created_date,
-		updated_date,
-		logo_path,
-		user_id from company_mast;
+		cm.comp_id,
+		cm.comp_code,
+		cm.comp_name,
+		cm.comp_short_name,
+		cm.comp_type,
+		cm.comp_Desc,
+		cm.cin_number,
+		cm.gst_number,
+		cm.pan_number,
+		cm.contperson_name,
+		cm.contact_email,
+		cm.contact_phone,
+		cm.address_line1,
+		cm.address_line2,
+		ctm.city_name,
+		cm.pincode,
+		cm.is_active,
+		cm.created_date,
+		cm.updated_date,
+		cm.logo_path,
+		um.user_name 
+		from company_mast cm
+		left join city_mast ctm on cm.city_id=ctm.city_id
+		left join user_mast um on cm.user_id=um.user_id;
 		
 	end try
 		begin catch
@@ -257,7 +274,9 @@ begin
 			@ErrorNumber,
 			@ErrorProcedure,
 			@ErrorLine,
-			@ErrorMessage
+			@ErrorMessage;
+
+			THROW;
 		end catch
 end
 
@@ -300,7 +319,9 @@ begin
 		@ErrorNumber,
 		@ErrorProcedure,
 		@ErrorLine,
-		@ErrorMessage
+		@ErrorMessage;
+
+		THROW;
 	end catch
 end
 
@@ -322,7 +343,9 @@ begin
 		@ErrorNumber,
 		@ErrorProcedure,
 		@ErrorLine,
-		@ErrorMessage			
+		@ErrorMessage;
+		
+		THROW;
 	end catch
 end
 

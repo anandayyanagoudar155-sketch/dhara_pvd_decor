@@ -135,6 +135,7 @@ foreign key(user_id) references user_mast(user_id)
 
 create table emp_calenderdays(
 emp_calender_id bigint identity(1,1) primary key,
+emp_calender_code varchar(15) not null unique,
 fin_year_id bigint,
 month_id bigint,
 month_days decimal(5,2),
