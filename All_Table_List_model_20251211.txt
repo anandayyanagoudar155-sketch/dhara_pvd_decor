@@ -1,0 +1,58 @@
+------Primary Tables
+Select * from user_mast;
+Select * from country_mast;
+Select * from state_mast;
+Select * from city_mast;
+Select * from fin_year_mast;
+Select * from month_mast;
+Select * from brand_mast;
+Select * from colour_mast;
+Select * from company_mast;
+Select * from hsn_mast;
+Select * from leavetype_mast;
+Select * from paytype_mast;
+Select * from trans_type_mast;
+Select * from unit_mast;
+Select * from user_details;
+Select * from employee_desg_mast;
+Select * from customer_mast;
+Select * from employee_mast;
+Select * from vendor_mast;
+Select * from emp_calenderdays;
+
+------Sales
+Select * from customer_mast;
+Select * from product_mast;
+Select * from inward_mast;
+Select * from inward_return;
+Select * from salesinvoice_mast;
+Select * from salesinvoicedetails;
+Select * from challan_mast;
+Select * from receipt_mast;
+Select * from receipt_details;
+
+----Model(Purchase)
+Select * from vendor_mast;
+Select * from product_mast;
+Select * from purchaseinvoice_mast;
+Select * from purchaseinvoice_details;
+Select * from payment_mast;
+Select * from payment_details;
+Select * from dailyconsumption_mast;
+
+-----Model(Employee)
+Select * from emp_calenderdays;
+Select * from employee_mast;
+Select * from emp_leave_mast;
+Select * from payment_mast;
+Select * from payment_details;
+
+
+
+
+
+
+
+
+
+
