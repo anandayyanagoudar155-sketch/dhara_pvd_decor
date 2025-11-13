@@ -1,12 +1,14 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del]    Script Date: 13-11-2025 11:05:11 ******/
+/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del]    Script Date: 13-11-2025 17:05:27 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 
 
 
@@ -38,9 +40,13 @@ CREATE procedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del](
 as
 Begin
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
+set @net_total = (@gross_total + @sgst_total + @cgst_total + @igst_total) - @discount_total + @roundoff_total;
+set @balance_total = @net_total
 
 	if @action = 'insert'
 	begin
+		
+
 		begin try
 			begin transaction
 			insert into purchaseinvoice_mast(prefix,suffix,invoive_no,purchase_date,vendor_id,gross_total,

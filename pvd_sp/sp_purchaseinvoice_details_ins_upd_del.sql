@@ -1,12 +1,15 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_details_ins_upd_del]    Script Date: 13-11-2025 11:04:37 ******/
+/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_details_ins_upd_del]    Script Date: 13-11-2025 17:05:45 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
+
 
 
 
@@ -44,6 +47,22 @@ CREATE procedure [dbo].[sp_purchaseinvoice_details_ins_upd_del](
 as
 Begin
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
+set @rate =(Select rate from product_mast where product_id = @product_id);
+set @sgst_perc = (Select sgst_perc from product_mast 
+				  inner join hsn_mast on product_mast.hsn_id = hsn_mast.hsn_id
+				  where product_mast.product_id = @product_id);
+set @cgst_perc = (Select cgst_perc from product_mast 
+				  inner join hsn_mast on product_mast.hsn_id = hsn_mast.hsn_id
+				  where product_mast.product_id = @product_id);
+set @igst_perc = (Select igst_perc from product_mast 
+				  inner join hsn_mast on product_mast.hsn_id = hsn_mast.hsn_id
+				  where product_mast.product_id = @product_id);
+set @gross_amt = (@rate * @totalquantity * @totalsqf_runningfeet);
+set @sgst_amt = ((@gross_amt * @sgst_perc)/100);
+set @cgst_amt = ((@gross_amt * @cgst_perc)/100);
+set @igst_amt = ((@gross_amt * @igst_perc)/100);
+set @discount_amt = ((@gross_amt * @discount_perc)/100);
+set @total_amt = ((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @discount_amt);
 
 	if @action = 'insert'
 	begin
@@ -56,6 +75,16 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			values(@purchase_id,@product_id,@colour_id,@unit_id,@length,@width,@height,@kg,@liters,@totalsqf_runningfeet,
 			@rate,@gross_amt,@totalquantity,@sgst_perc,@sgst_amt,@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,
 			@discount_amt,@total_amt,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+
+			update purchaseinvoice_mast
+			set gross_total = (Select sum(gross_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+			    sgst_total = (Select sum(sgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				cgst_total = (Select sum(cgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				igst_total = (Select sum(igst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				discount_total = (Select sum(discount_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				net_total = (Select sum(total_amt) from purchaseinvoice_details where purchase_id = @purchase_id)
+				where purchase_id = @purchase_id;
+
 			commit transaction;
 		end try
 		begin catch
@@ -92,6 +121,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			left join product_mast pm on pid.product_id = pm.product_id
 			left join colour_mast crm on  pid.colour_id = crm.colour_id
 			left join unit_mast utm on pid.unit_id = utm.unit_id;
+
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -141,6 +171,16 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			begin transaction;
 			
 			delete from purchaseinvoice_details where purchase_detail_id = @purchase_detail_id;
+
+			update purchaseinvoice_mast
+			set gross_total = (Select sum(gross_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+			    sgst_total = (Select sum(sgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				cgst_total = (Select sum(cgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				igst_total = (Select sum(igst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				discount_total = (Select sum(discount_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				net_total = (Select sum(total_amt) from purchaseinvoice_details where purchase_id = @purchase_id)
+			where purchase_id = @purchase_id;
+
 			commit transaction;
 		end try
 		begin catch
@@ -195,6 +235,15 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				comp_id = @comp_id,
 				user_id = @user_id
 			where purchase_detail_id = @purchase_detail_id;
+
+			update purchaseinvoice_mast
+			set gross_total = (Select sum(gross_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+			    sgst_total = (Select sum(sgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				cgst_total = (Select sum(cgst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				igst_total = (Select sum(igst_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				discount_total = (Select sum(discount_amt) from purchaseinvoice_details where purchase_id = @purchase_id),
+				net_total = (Select sum(total_amt) from purchaseinvoice_details where purchase_id = @purchase_id)
+			where purchase_id = @purchase_id;
 
 			if @@ROWCOUNT = 0
 			begin

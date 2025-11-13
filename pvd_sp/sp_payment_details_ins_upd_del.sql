@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_payment_details_ins_upd_del]    Script Date: 13-11-2025 11:01:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_payment_details_ins_upd_del]    Script Date: 13-11-2025 17:06:15 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 CREATE procedure [dbo].[sp_payment_details_ins_upd_del](
 @action varchar(max) = '',
@@ -32,6 +33,14 @@ as
 Begin
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
 
+declare @balance_amount decimal(12,2);
+set @balance_amount = (Select sum(balance_total) from payment_mast  where payment_id = @payment_id);
+if @balance_amount < @total_amt
+begin
+	return;
+end
+
+
 	if @action = 'insert'
 	begin
 		begin try
@@ -42,6 +51,32 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			values(@payment_id,@pay_type_id,@total_amt,@cheque_number,@cheque_bankname,@ifsc_code,@cheque_date,
 			@account_number,@transaction_id,@card_number,@transaction_date,@created_date,@updated_date,
 			@fin_year_id,@comp_id,@user_id);
+
+			update payment_mast 
+			set balance_total = net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			where  payment_id = @payment_id;
+
+			update  pim
+			set balance_total = pim.net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			from purchaseinvoice_mast pim
+			inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+			inner join payment_details pd on pm.payment_id = pd.payment_id
+			where  pd.payment_id = @payment_id;
+
+			if @balance_amount = 0
+			begin
+				update payment_mast 
+				set payment_status = 1
+				where  payment_id = @payment_id;
+
+				update purchaseinvoice_mast 
+				set paymentstatus = 1
+				from purchaseinvoice_mast pim
+				inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+				inner join payment_details pd on pm.payment_id = pd.payment_id
+				where  pd.payment_id = @payment_id;
+			end
+
 			commit transaction;
 		end try
 		begin catch
@@ -124,6 +159,32 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			begin transaction;
 			
 			delete from payment_details where payment_detail_id = @payment_detail_id;
+
+			update payment_mast 
+			set balance_total = net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			where  payment_id = @payment_id;
+
+			update  pim
+			set balance_total = pim.net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			from purchaseinvoice_mast pim
+			inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+			inner join payment_details pd on pm.payment_id = pd.payment_id
+			where  pd.payment_id = @payment_id;
+
+			if @balance_amount = 0
+			begin
+				update payment_mast 
+				set payment_status = 1
+				where  payment_id = @payment_id;
+
+				update purchaseinvoice_mast 
+				set paymentstatus = 1
+				from purchaseinvoice_mast pim
+				inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+				inner join payment_details pd on pm.payment_id = pd.payment_id
+				where  pd.payment_id = @payment_id;
+			end
+
 			commit transaction;
 		end try
 		begin catch
@@ -167,6 +228,31 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				comp_id = @comp_id,
 				user_id = @user_id
 			where payment_detail_id = @payment_detail_id;
+
+			update payment_mast 
+			set balance_total = net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			where  payment_id = @payment_id;
+
+			update  pim
+			set balance_total = pim.net_total - ISNULL((Select SUM(total_amt) from payment_details pd where pd.payment_id = @payment_id),0)
+			from purchaseinvoice_mast pim
+			inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+			inner join payment_details pd on pm.payment_id = pd.payment_id
+			where  pd.payment_id = @payment_id;
+
+			if @balance_amount = 0
+			begin
+				update payment_mast 
+				set payment_status = 1
+				where  payment_id = @payment_id;
+
+				update purchaseinvoice_mast 
+				set paymentstatus = 1
+				from purchaseinvoice_mast pim
+				inner join payment_mast pm on pim.purchase_id = pm.purchase_id
+				inner join payment_details pd on pm.payment_id = pd.payment_id
+				where  pd.payment_id = @payment_id;
+			end
 
 			if @@ROWCOUNT = 0
 			begin

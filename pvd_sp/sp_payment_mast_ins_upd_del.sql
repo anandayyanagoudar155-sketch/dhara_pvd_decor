@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_payment_mast_ins_upd_del]    Script Date: 13-11-2025 11:01:53 ******/
+/****** Object:  StoredProcedure [dbo].[sp_payment_mast_ins_upd_del]    Script Date: 13-11-2025 17:06:49 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 CREATE procedure [dbo].[sp_payment_mast_ins_upd_del](
 @action varchar(max) = '',
@@ -27,8 +28,9 @@ CREATE procedure [dbo].[sp_payment_mast_ins_upd_del](
 as
 Begin
 declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errormessage nvarchar(max);
-
+set @net_total = (Select net_total from purchaseinvoice_mast where purchase_id = @purchase_id)
 	if @action = 'insert'
+	set @balance_total = @net_total;
 	begin
 		begin try
 			begin transaction

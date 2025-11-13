@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_receipt_mast_ins_upd_del]    Script Date: 13-11-2025 11:06:28 ******/
+/****** Object:  StoredProcedure [dbo].[sp_receipt_mast_ins_upd_del]    Script Date: 13-11-2025 17:04:52 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 CREATE procedure [dbo].[sp_receipt_mast_ins_upd_del](
@@ -27,7 +28,7 @@ as
 begin
 
 declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
-set @net_total = (Select sum(net_total) from salesinvoice_mast where sales_id = @sales_id);
+set @net_total = (Select net_total from salesinvoice_mast where sales_id = @sales_id);
 set @balance_amount = @net_total;
 
 if @action='insert'

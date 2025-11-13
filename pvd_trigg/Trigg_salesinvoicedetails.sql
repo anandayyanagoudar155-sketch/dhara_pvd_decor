@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  Trigger [dbo].[Trigg_salesinvoicedetails]    Script Date: 13-11-2025 11:15:26 ******/
+/****** Object:  Trigger [dbo].[Trigg_salesinvoicedetails]    Script Date: 13-11-2025 17:12:19 ******/
 SET ANSI_NULLS ON
 GO
 

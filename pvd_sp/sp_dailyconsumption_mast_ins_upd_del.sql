@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_dailyconsumption_mast_ins_upd_del]    Script Date: 13-11-2025 10:54:14 ******/
+/****** Object:  StoredProcedure [dbo].[sp_dailyconsumption_mast_ins_upd_del]    Script Date: 13-11-2025 17:07:14 ******/
 SET ANSI_NULLS ON
 GO
 
