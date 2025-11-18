@@ -1,12 +1,14 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_inward_mast_ins_upd_del]    Script Date: 13-11-2025 10:58:41 ******/
+/****** Object:  StoredProcedure [dbo].[sp_inward_mast_ins_upd_del]    Script Date: 18-11-2025 21:59:33 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 
 
 CREATE procedure [dbo].[sp_inward_mast_ins_upd_del](
@@ -107,6 +109,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
+		set @balance = @totalquantity;
 			update inward_mast
 			set customer_id=@customer_id,
 			product_id=@product_id,

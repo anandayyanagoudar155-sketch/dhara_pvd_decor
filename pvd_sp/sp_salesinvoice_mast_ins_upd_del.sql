@@ -1,12 +1,18 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_salesinvoice_mast_ins_upd_del]    Script Date: 13-11-2025 17:04:15 ******/
+/****** Object:  StoredProcedure [dbo].[sp_salesinvoice_mast_ins_upd_del]    Script Date: 18-11-2025 22:08:57 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
+
+
+
+
 
 
 
@@ -40,19 +46,23 @@ begin
 
 declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
 
-SET @net_total = 
-    (@gross_total 
-     + @sgst_total 
-     + @cgst_total 
-     + @igst_total)
-    - @discount_total
-    + @roundoff_total;
 
 if @action='insert'
 begin
-set @balance_total = @net_total;
 	begin try
 		begin transaction
+
+		SET @net_total = 
+		isnull((@gross_total 
+		 + @sgst_total 
+		 + @cgst_total 
+		 + @igst_total)
+		- @discount_total
+		,0);
+
+		set @balance_total = @net_total;
+		set @roundoff_total = (ROUND(@net_total,0))
+
 			insert into salesinvoice_mast(prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id)
 			values(@prefix,@suffix,@customer_id,@sales_date,@gross_total,@sgst_total,@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@balance_total,@payment_status,@isactive,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
 		commit transaction;
@@ -102,6 +112,8 @@ begin
 		end
 
 		delete from salesinvoice_mast where sales_id=@sales_id;
+
+		
 		commit transaction;
 	
 	end try
@@ -130,19 +142,32 @@ if @action='update'
 begin
 	begin try
 		begin transaction
+
+		
 			update salesinvoice_mast
 			set prefix=@prefix,
 			suffix=@suffix,
 			customer_id=@customer_id,
 			sales_date=@sales_date,
-			gross_total=@gross_total,
-			sgst_total=@sgst_total,
-			cgst_total=@cgst_total,
-			igst_total=@igst_total,
-			discount_total=@discount_total,
-			roundoff_total=@roundoff_total,
-			net_total=@net_total,
-			balance_total=@balance_total,
+			gross_total=isnull((select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+			sgst_total=isnull((select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+			cgst_total=isnull((select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+			igst_total=isnull((select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+			discount_total=isnull((select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+			roundoff_total=ROUND(isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id),0),0),
+			net_total=isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+			balance_total=(isnull(
+							(Select sum(total_amt) as net_toatal
+							  from salesinvoicedetails
+							  where sales_id = @sales_id								
+							 ) - 
+							 (
+							  Select sum(rd.total_amt) as reduced_amt
+							  from receipt_details rd
+							  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+							  where sales_id = @sales_id
+							 ),0)
+						  ),
 			payment_status=@payment_status,
 			isactive=@isactive,
 			fin_year_id=@fin_year_id,
@@ -151,7 +176,31 @@ begin
 			updated_date=@updated_date,
 			user_id=@user_id
 			where sales_id=@sales_id;
-			
+
+		IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and net_total>0)
+		BEGIN
+		IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and balance_total=0 )
+		BEGIN
+		--print 'In';
+			Update salesinvoice_mast
+			set payment_status = 1
+			where sales_id = @sales_id;
+		END
+		ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and balance_total>0)
+		BEGIN
+		--print 'In1';
+			Update salesinvoice_mast
+			set payment_status = 0
+			where sales_id = @sales_id;
+		END
+		ELSE
+		BEGIN
+		--print 'In2';
+			Update salesinvoice_mast
+			set payment_status = -1
+			where sales_id = @sales_id;
+		END
+		END
 		if @@ROWCOUNT = 0
 		begin
 			rollback transaction;

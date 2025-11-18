@@ -1,14 +1,15 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  Trigger [dbo].[Trigg_salesinvoicedetails]    Script Date: 13-11-2025 17:12:19 ******/
+/****** Object:  Trigger [dbo].[Trigg_salesinvoicedetails]    Script Date: 18-11-2025 22:25:25 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-create trigger [dbo].[Trigg_salesinvoicedetails]
+
+CREATE trigger [dbo].[Trigg_salesinvoicedetails]
 on [dbo].[salesinvoicedetails]
 after INSERT, UPDATE, DELETE
 As
@@ -24,6 +25,24 @@ Begin
 	Select product_id from inserted
 	union
 	Select product_id from deleted
+	)
+
+	Update im
+	set im.balance_Quantity = im.totalquantity - (ISNULL((
+															Select SUM(ir.returnquantity)
+															from inward_return ir 
+															where ir.inward_id = im.inward_id
+														),0) + 
+														ISNULL((
+															Select SUM(sids.totalquantity)
+															from salesinvoicedetails sids 
+															where sids.inward_id = im.inward_id
+														),0))
+	from inward_mast im
+	where im.inward_id = (
+	Select inward_id from inserted
+	union
+	Select inward_id from deleted
 	)
 End
 GO

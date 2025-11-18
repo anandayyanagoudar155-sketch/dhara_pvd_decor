@@ -1,14 +1,14 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  Trigger [dbo].[Trigg_purchaseinvoice_details]    Script Date: 13-11-2025 17:11:50 ******/
+/****** Object:  Trigger [dbo].[Trigg_purchaseinvoice_details]    Script Date: 18-11-2025 22:24:57 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER trigger [dbo].[Trigg_purchaseinvoice_details]
+CREATE trigger [dbo].[Trigg_purchaseinvoice_details]
 on [dbo].[purchaseinvoice_details]
 after insert,update,delete
 as
@@ -26,5 +26,8 @@ BEGIN
 		Select product_id from deleted
 		)
 END
+GO
+
+ALTER TABLE [dbo].[purchaseinvoice_details] ENABLE TRIGGER [Trigg_purchaseinvoice_details]
 GO
 

@@ -1,12 +1,16 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_receipt_details_ins_upd_del]    Script Date: 13-11-2025 11:05:53 ******/
+/****** Object:  StoredProcedure [dbo].[sp_receipt_details_ins_upd_del]    Script Date: 18-11-2025 22:22:28 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
+
+
 
 
 CREATE procedure [dbo].[sp_receipt_details_ins_upd_del](
@@ -35,45 +39,115 @@ begin
 declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
 
 declare @balance_amount decimal(12,2);
-set @balance_amount = (Select sum(balance_amount) from receipt_mast  where receipt_id = @receipt_id)
-if @balance_amount < @total_amt
-begin
-	return;
-end
+declare @sim_id bigint;
+declare @rd_id bigint;
+
 
 
 if @action='insert'
 begin
 	begin try
 		begin transaction
+
+		set @balance_amount = (Select sum(balance_amount) from receipt_mast  where receipt_id = @receipt_id)
+		if @balance_amount < @total_amt
+		begin
+		rollback transaction;
+			return;
+		end
+
+
+
 			insert into receipt_details(receipt_id,paytype_id,total_amt,cheque_number,ifsc_code,cheque_date,account_number,transaction_id,card_number,transaction_date,fin_year_id,comp_id,created_date,updated_date,user_id)
 			values(@receipt_id,@paytype_id,@total_amt,@cheque_number,@ifsc_code,@cheque_date,@account_number,@transaction_id,@card_number,@transaction_date,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
 
-			update receipt_mast 
-			set balance_amount = net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
-			where  receipt_id = @receipt_id;
+			
 
-			update  sim
-			set balance_total = sim.net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
+			Update receipt_mast
+			set balance_amount = isnull((Select sum(total_amt) as net_toatal
+								  from salesinvoicedetails sid
+								  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+								  where receipt_id = @receipt_id								
+								 ),0) - 
+								 isnull((
+								  Select sum(total_amt) as reduced_amt
+								  from receipt_details rd
+								  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+								  where rd.receipt_id = @receipt_id
+								 ),0)
+			where receipt_id = @receipt_id;
+
+			Update sim
+			set balance_total = isnull((Select sum(total_amt) as net_toatal
+							  from salesinvoicedetails sid
+							  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+							  where receipt_id = @receipt_id								
+							 ),0) - 
+							 isnull((
+							  Select sum(total_amt) as reduced_amt
+							  from receipt_details rd
+							  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+							  where rd.receipt_id = @receipt_id
+							 ),0)
 			from salesinvoice_mast sim
 			inner join receipt_mast rm on sim.sales_id = rm.sales_id
 			inner join receipt_details rd on rm.receipt_id = rd.receipt_id
 			where  rd.receipt_id = @receipt_id;
 
-			if @balance_amount = 0
-			begin
-				update receipt_mast 
+			
+
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @receipt_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @receipt_id and balance_amount=0 )
+			BEGIN
+			--print 'In';
+				Update receipt_mast
 				set receipt_status = 1
-				where  receipt_id = @receipt_id;
+				where receipt_id = @receipt_id
+			END
+			ELSE IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @receipt_id and balance_amount>0)
+			BEGIN
+			--print 'In1';
+				Update receipt_mast
+				set receipt_status = 0
+				where receipt_id = @receipt_id
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update receipt_mast
+				set receipt_status = -1
+				where receipt_id = @receipt_id
+			END
+			END
 
-				update salesinvoice_mast 
+
+			set @sim_id = (Select sales_id from receipt_mast  where receipt_id = @receipt_id);
+
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total=0 )
+			BEGIN
+			--print 'In';
+				Update salesinvoice_mast
 				set payment_status = 1
-				from salesinvoice_mast sim
-				inner join receipt_mast rm on sim.sales_id = rm.sales_id
-				inner join receipt_details rd on rm.receipt_id = rd.receipt_id
-				where  rd.receipt_id = @receipt_id;
-
-			end
+				where sales_id = @sim_id;
+			END
+			ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total>0)
+			BEGIN
+			--print 'In1';
+				Update salesinvoice_mast
+				set payment_status = 0
+				where sales_id = @sim_id;
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update salesinvoice_mast
+				set payment_status = -1
+				where sales_id = @sim_id;
+			END
+			END
 
 		commit transaction;
 	end try
@@ -103,33 +177,96 @@ begin
 	begin try
 		begin transaction;
 		
+			set @rd_id = (Select receipt_id from receipt_details where receipt_dtl_id = @receipt_dtl_id);
 			delete from receipt_details where receipt_dtl_id=@receipt_dtl_id;
 		
-			update receipt_mast 
-			set balance_amount = net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
-			where  receipt_id = @receipt_id;
+			
+			Update receipt_mast
+			set balance_amount = isnull((Select sum(total_amt) as net_toatal
+								  from salesinvoicedetails sid
+								  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+								  where receipt_id = @rd_id								
+								 ),0) - 
+								 isnull((
+								  Select sum(total_amt) as reduced_amt
+								  from receipt_details rd
+								  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+								  where rd.receipt_id = @rd_id
+								 ),0)
+			where receipt_id = @rd_id;
 
-			update  sim
-			set balance_total = sim.net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
+			Update sim
+			set balance_total = isnull((Select sum(total_amt) as net_toatal
+							  from salesinvoicedetails sid
+							  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+							  where receipt_id = @rd_id								
+							 ),0) - 
+							 isnull((
+							  Select sum(total_amt) as reduced_amt
+							  from receipt_details rd
+							  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+							  where rd.receipt_id = @rd_id
+							 ),0)
 			from salesinvoice_mast sim
 			inner join receipt_mast rm on sim.sales_id = rm.sales_id
 			inner join receipt_details rd on rm.receipt_id = rd.receipt_id
-			where  rd.receipt_id = @receipt_id;
+			where  rd.receipt_id = @rd_id;
 
-			if @balance_amount = 0
-			begin
-				update receipt_mast 
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and balance_amount=0 )
+			BEGIN
+			--print 'In';
+				Update receipt_mast
 				set receipt_status = 1
-				where  receipt_id = @receipt_id;
+				where receipt_id = @rd_id
+			END
+			ELSE IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and balance_amount>0)
+			BEGIN
+			--print 'In1';
+				Update receipt_mast
+				set receipt_status = 0
+				where receipt_id = @rd_id
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update receipt_mast
+				set receipt_status = -1
+				where receipt_id = @rd_id
+			END
+			END
 
-				update salesinvoice_mast 
+
+			
+			set @sim_id = (Select sales_id from receipt_mast  where receipt_id = @rd_id);
+
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total=0 )
+			BEGIN
+			--print 'In';
+				Update salesinvoice_mast
 				set payment_status = 1
-				from salesinvoice_mast sim
-				inner join receipt_mast rm on sim.sales_id = rm.sales_id
-				inner join receipt_details rd on rm.receipt_id = rd.receipt_id
-				where  rd.receipt_id = @receipt_id;
+				where sales_id = @sim_id;
+			END
+			ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total>0)
+			BEGIN
+			--print 'In1';
+				Update salesinvoice_mast
+				set payment_status = 0
+				where sales_id = @sim_id;
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update salesinvoice_mast
+				set payment_status = -1
+				where sales_id = @sim_id;
+			END
+			END
 
-			end
+			
 		commit transaction;
 	
 	end try
@@ -158,6 +295,16 @@ if @action='update'
 begin
 	begin try
 		begin transaction
+
+			set @rd_id = (Select receipt_id from receipt_details where receipt_dtl_id = @receipt_dtl_id);
+
+			set @balance_amount = (Select sum(balance_amount) from receipt_mast  where receipt_id = @rd_id);
+			if @balance_amount < @total_amt
+			begin
+			rollback transaction;
+				return;
+			end
+
 			update receipt_details 
 			set receipt_id=@receipt_id,
 			paytype_id=@paytype_id,
@@ -174,33 +321,94 @@ begin
 			created_date=@created_date,
 			updated_date=@updated_date,
 			user_id=@user_id
-				where receipt_dtl_id=@receipt_dtl_id;
+			where receipt_dtl_id=@receipt_dtl_id;
 
-			update receipt_mast 
-			set balance_amount = net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
-			where  receipt_id = @receipt_id;
+			Update receipt_mast
+			set balance_amount = isnull((Select sum(total_amt) as net_toatal
+								  from salesinvoicedetails sid
+								  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+								  where receipt_id = @rd_id								
+								 ),0) - 
+								 isnull((
+								  Select sum(total_amt) as reduced_amt
+								  from receipt_details rd
+								  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+								  where rd.receipt_id = @rd_id
+								 ),0)
+			where receipt_id = @rd_id;
 
-			update  sim
-			set balance_total = sim.net_total - ISNULL((Select SUM(total_amt) from receipt_details rd where rd.receipt_id = @receipt_id),0)
+			Update sim
+			set balance_total = isnull((Select sum(total_amt) as net_toatal
+							  from salesinvoicedetails sid
+							  inner join receipt_mast rm on sid.sales_id = rm.sales_id
+							  where receipt_id = @rd_id								
+							 ),0) - 
+							 isnull((
+							  Select sum(total_amt) as reduced_amt
+							  from receipt_details rd
+							  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+							  where rd.receipt_id = @rd_id
+							 ),0)
 			from salesinvoice_mast sim
 			inner join receipt_mast rm on sim.sales_id = rm.sales_id
 			inner join receipt_details rd on rm.receipt_id = rd.receipt_id
-			where  rd.receipt_id = @receipt_id;
+			where  rd.receipt_id = @rd_id;
 
-			if @balance_amount = 0
-			begin
-				update receipt_mast 
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and balance_amount=0 )
+			BEGIN
+			--print 'In';
+				Update receipt_mast
 				set receipt_status = 1
-				where  receipt_id = @receipt_id;
+				where receipt_id = @rd_id
+			END
+			ELSE IF EXISTS (SELECT 1 FROM receipt_mast WHERE receipt_id = @rd_id and balance_amount>0)
+			BEGIN
+			--print 'In1';
+				Update receipt_mast
+				set receipt_status = 0
+				where receipt_id = @rd_id
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update receipt_mast
+				set receipt_status = -1
+				where receipt_id = @rd_id
+			END
+			END
 
-				update salesinvoice_mast 
+
+			
+			set @sim_id = (Select sales_id from receipt_mast  where receipt_id = @rd_id);
+
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and net_total>0)
+			BEGIN
+			IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total=0 )
+			BEGIN
+			--print 'In';
+				Update salesinvoice_mast
 				set payment_status = 1
-				from salesinvoice_mast sim
-				inner join receipt_mast rm on sim.sales_id = rm.sales_id
-				inner join receipt_details rd on rm.receipt_id = rd.receipt_id
-				where  rd.receipt_id = @receipt_id;
+				where sales_id = @sim_id;
+			END
+			ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sim_id and balance_total>0)
+			BEGIN
+			--print 'In1';
+				Update salesinvoice_mast
+				set payment_status = 0
+				where sales_id = @sim_id;
+			END
+			ELSE
+			BEGIN
+			--print 'In2';
+				Update salesinvoice_mast
+				set payment_status = -1
+				where sales_id = @sim_id;
+			END
+			END
 
-			end
+
 				
 			if @@ROWCOUNT = 0
 			begin

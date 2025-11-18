@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  Trigger [dbo].[trigg_dailyconsumption_mast]    Script Date: 13-11-2025 17:08:12 ******/
+/****** Object:  Trigger [dbo].[trigg_dailyconsumption_mast]    Script Date: 18-11-2025 22:23:20 ******/
 SET ANSI_NULLS ON
 GO
 

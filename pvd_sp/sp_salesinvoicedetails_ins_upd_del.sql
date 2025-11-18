@@ -1,12 +1,17 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_salesinvoicedetails_ins_upd_del]    Script Date: 13-11-2025 11:07:31 ******/
+/****** Object:  StoredProcedure [dbo].[sp_salesinvoicedetails_ins_upd_del]    Script Date: 18-11-2025 22:13:33 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
+
+
+
 
 
 CREATE procedure [dbo].[sp_salesinvoicedetails_ins_upd_del](
@@ -45,28 +50,41 @@ as
 begin
 
 declare @ErrorNumber int, @ErrorProcedure nvarchar(128), @ErrorLine int, @ErrorMessage nvarchar(max);
-set @rate = (Select rate from product_mast  where product_id = @product_id);
-set @totalquantity = (Select balance_quantity from inward_mast where inward_id = @inward_id);
-set @sgst_perc =(Select hm.sgst_perc from product_mast pm 
+declare @sid bigint;
+set @rate = isnull((Select rate from product_mast  where product_id = @product_id),0);
+--set @totalquantity = (Select balance_quantity from inward_mast where inward_id = @inward_id);
+set @sgst_perc =isnull((Select hm.sgst_perc from product_mast pm 
 				inner join hsn_mast hm on pm.hsn_id = hm.hsn_id
-				where pm.product_id = @product_id);
-set @cgst_perc =(Select hm.cgst_perc from product_mast pm 
+				where pm.product_id = @product_id),0);
+set @cgst_perc =isnull((Select hm.cgst_perc from product_mast pm 
 				inner join hsn_mast hm on pm.hsn_id = hm.hsn_id
-				where pm.product_id = @product_id);
-set @igst_perc =(Select hm.igst_perc from product_mast pm 
+				where pm.product_id = @product_id),0);
+set @igst_perc =isnull((Select hm.igst_perc from product_mast pm 
 				inner join hsn_mast hm on pm.hsn_id = hm.hsn_id
-				where pm.product_id = @product_id);
-set @gross_amt = (@rate * @totalquantity * @totalsqf_runningfeet);
-set @sgst_amt = ((@gross_amt * @sgst_perc)/100);
-set @cgst_amt = ((@gross_amt * @cgst_perc)/100);
-set @igst_amt = ((@gross_amt * @igst_perc)/100);
-set @discount_amt = ((@gross_amt * @discount_perc)/100);
-set @total_amt = ((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @discount_amt);
+				where pm.product_id = @product_id),0);
+set @gross_amt =isnull((@rate * @totalquantity),0);
+set @sgst_amt = isnull(((@gross_amt * @sgst_perc)/100),0);
+set @cgst_amt = isnull(((@gross_amt * @cgst_perc)/100),0);
+set @igst_amt = isnull(((@gross_amt * @igst_perc)/100),0);
+set @discount_amt = isnull(((@gross_amt * @discount_perc)/100),0);
+set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @discount_amt),0);
+
 
 if @action='insert'
 begin
 	begin try
 		begin transaction
+
+		if ((@totalquantity > (Select balance_quantity from inward_mast where inward_id = @inward_id and product_id = @Product_id)) or 
+		((Select balance_quantity from inward_mast where inward_id = @inward_id and product_id = @Product_id) <= 0))
+		Begin
+			--print 'in1'
+			rollback transaction;
+			return;
+			
+		End
+
+		
 			insert into salesinvoicedetails(
 			sales_id,
 			inward_id,
@@ -101,13 +119,53 @@ begin
 		
 				update salesinvoice_mast
 				set 
-				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
+				  gross_total = isnull((select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+				  sgst_total  = isnull((select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+				  cgst_total  = isnull((select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+				  igst_total  = isnull((select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),0),
+				  discount_total = isnull((select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+				  roundoff_total=ROUND(isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id),0),0),
+				  net_total   = isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id),0),
+				  balance_total=(
+									isnull((Select sum(total_amt) as net_toatal
+									  from salesinvoicedetails
+									  where sales_id = @sales_id								
+									 ),0) - 
+									 isnull((
+									  Select sum(rd.total_amt) as reduced_amt
+									  from receipt_details rd
+									  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+									  where sales_id = @sales_id
+									 ),0)
+						  )
 				where sales_id = @sales_id;
+
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and net_total>0)
+				BEGIN
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and balance_total=0 )
+				BEGIN
+				--print 'In';
+					Update salesinvoice_mast
+					set payment_status = 1
+					where sales_id = @sales_id;
+				END
+				ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and balance_total>0)
+				BEGIN
+				--print 'In1';
+					Update salesinvoice_mast
+					set payment_status = 0
+					where sales_id = @sales_id;
+				END
+				ELSE
+				BEGIN
+				--print 'In2';
+					Update salesinvoice_mast
+					set payment_status = -1
+					where sales_id = @sales_id;
+				END
+				END
+
+				
 		
 		commit transaction;
 	end try
@@ -136,17 +194,59 @@ if @action='delete'
 begin	
 	begin try
 		begin transaction;
-			delete from salesinvoicedetails where sales_detail_id=@sales_detail_id;
+			
+				select @sid = sales_id from salesinvoicedetails where sales_detail_id = @sales_detail_id;
 
+				delete from salesinvoicedetails where sales_detail_id=@sales_detail_id;
+
+				
 				update salesinvoice_mast
 				set 
-				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
-				where sales_id = @sales_id;
+				  gross_total = isnull((select SUM(gross_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  sgst_total  = isnull((select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  cgst_total  = isnull((select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  igst_total  = isnull((select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  discount_total = isnull((select SUM(discount_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  roundoff_total=ROUND(isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sid),0),0),
+				  net_total   = isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  balance_total=(
+									isnull((Select sum(total_amt) as net_toatal
+									  from salesinvoicedetails
+									  where sales_id = @sid								
+									 ),0) - 
+									 isnull((
+									  Select sum(rd.total_amt) as reduced_amt
+									  from receipt_details rd
+									  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+									  where sales_id = @sid
+									 ),0)
+						  )
+				where sales_id = @sid;
+
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and net_total>0)
+				BEGIN
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and balance_total=0 )
+				BEGIN
+				--print 'In';
+					Update salesinvoice_mast
+					set payment_status = 1
+					where sales_id = @sid;
+				END
+				ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and balance_total>0)
+				BEGIN
+				--print 'In1';
+					Update salesinvoice_mast
+					set payment_status = 0
+					where sales_id = @sid;
+				END
+				ELSE
+				BEGIN
+				--print 'In2';
+					Update salesinvoice_mast
+					set payment_status = -1
+					where sales_id = @sid;
+				END
+				END
 
 		commit transaction;
 	
@@ -176,6 +276,24 @@ if @action='update'
 begin
 	begin try
 		begin transaction
+
+		DECLARE @balQty numeric(18,2);
+		set @inward_id = (Select inward_id from salesinvoicedetails where sales_detail_id = @sales_detail_id)
+		set @product_id = (Select product_id from salesinvoicedetails where sales_detail_id = @sales_detail_id)
+
+
+			SELECT @balQty = balance_quantity
+			FROM inward_mast 
+			WHERE inward_id = @inward_id AND product_id = @product_id;
+
+			IF (@balQty IS NULL OR @balQty <= 0 OR @totalquantity > @balQty)
+			BEGIN
+				--PRINT 'in1';
+				ROLLBACK TRANSACTION;  -- rollback first
+				RETURN;                -- exit after rollback
+			END;
+
+		
 			update salesinvoicedetails
 			set sales_id=@sales_id,
 			inward_id=@inward_id,
@@ -207,21 +325,58 @@ begin
 			user_id=@user_id
 			where sales_detail_id=@sales_detail_id;
 
-				update salesinvoice_mast
-				set 
-				  gross_total = (select SUM(gross_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  sgst_total  = (select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  cgst_total  = (select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  igst_total  = (select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sales_id),
-				  discount_total = (select SUM(discount_amt) from salesinvoicedetails where sales_id = @sales_id),
-				  net_total   = (select SUM(total_amt) from salesinvoicedetails where sales_id = @sales_id)
-				where sales_id = @sales_id;
+			select @sid = sales_id from salesinvoicedetails where sales_detail_id = @sales_detail_id;
 
-		if @@ROWCOUNT = 0
-		begin
-			rollback transaction;
-			return;
-		end
+
+			update salesinvoice_mast
+				set 
+				  gross_total = isnull((select SUM(gross_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  sgst_total  = isnull((select SUM(sgst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  cgst_total  = isnull((select SUM(cgst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  igst_total  = isnull((select SUM(igst_amt)  from salesinvoicedetails where sales_id = @sid),0),
+				  discount_total = isnull((select SUM(discount_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  roundoff_total=ROUND(isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sid),0),0),
+				  net_total   = isnull((select SUM(total_amt) from salesinvoicedetails where sales_id = @sid),0),
+				  balance_total=(
+									isnull((Select sum(total_amt) as net_toatal
+									  from salesinvoicedetails
+									  where sales_id = @sid								
+									 ),0) - 
+									 isnull((
+									  Select sum(rd.total_amt) as reduced_amt
+									  from receipt_details rd
+									  inner join receipt_mast rm on rd.receipt_id = rm.receipt_id
+									  where sales_id = @sid
+									 ),0)
+						  )
+				where sales_id = @sid;
+
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and net_total>0)
+				BEGIN
+				IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and balance_total=0 )
+				BEGIN
+				--print 'In';
+					Update salesinvoice_mast
+					set payment_status = 1
+					where sales_id = @sid;
+				END
+				ELSE IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sid and balance_total>0)
+				BEGIN
+				--print 'In1';
+					Update salesinvoice_mast
+					set payment_status = 0
+					where sales_id = @sid;
+				END
+				ELSE
+				BEGIN
+				--print 'In2';
+					Update salesinvoice_mast
+					set payment_status = -1
+					where sales_id = @sid;
+				END
+				END
+
+				
 
 		commit transaction;
 	end try

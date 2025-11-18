@@ -1,12 +1,14 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_inward_return_ins_upd_del]    Script Date: 13-11-2025 10:59:12 ******/
+/****** Object:  StoredProcedure [dbo].[sp_inward_return_ins_upd_del]    Script Date: 18-11-2025 22:00:39 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 
 CREATE procedure [dbo].[sp_inward_return_ins_upd_del](
 @action varchar(max),
@@ -31,6 +33,15 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
+		if ((@returnquantity > (Select totalquantity from inward_mast where inward_id = @inward_id and product_id = @Product_id)) or 
+		((Select totalquantity from inward_mast where inward_id = @inward_id and product_id = @Product_id) <= 0))
+		Begin
+			rollback transaction;
+			return;
+			
+		End
+
+		
 			insert into inward_return(inward_id,customer_id,product_id,returnquantity,remarks,fin_year_id,comp_id,created_date,updated_date,user_id)
 			values(@inward_id,@customer_id,@product_id,@returnquantity,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id)
 		commit transaction;
@@ -87,6 +98,17 @@ if @action='update'
 begin
 	begin try
 		begin transaction
+
+		if ((@returnquantity > (Select totalquantity from inward_mast where inward_id = @inward_id and product_id = @Product_id)) or 
+		((Select totalquantity from inward_mast where inward_id = @inward_id and product_id = @Product_id) <= 0))
+		Begin
+			rollback transaction;
+			return;
+			
+		End
+
+		
+
 			update inward_return
 			set inward_id=@inward_id,
 			customer_id=@customer_id,
