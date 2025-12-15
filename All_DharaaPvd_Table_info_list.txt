@@ -1,0 +1,163 @@
+--1)
+---N/a
+Select * from user_mast;
+
+--2)
+---Comp_id,Fin_year_id
+Select * from user_details;
+
+--3)
+---Created_by,Modified_by
+Select * from country_mast;
+
+--4)
+---Created_by,Modified_by
+Select * from state_mast;
+
+--5)
+---Created_by,Modified_by
+Select * from city_mast;
+
+--6)
+---Created_by,Modified_by
+Select * from month_mast;
+
+--7)
+---Created_by,Modified_by
+Select * from fin_year_mast;
+
+--8)
+---Created_by,Modified_by
+Select * from employee_desg_mast;
+
+--9)
+---Created_by,Modified_by
+Select * from leavetype_mast
+
+--10)
+---N/a
+Select * from errorlog;
+
+--11)
+---Created_by,Modified_by
+Select * from unit_mast;
+
+--12)
+---Created_by,Modified_by
+Select * from hsn_mast;
+
+--13) 
+---Created_by,Modified_by
+Select * from prodtype_master;
+
+--14)
+---Created_by,Modified_by
+Select * from brand_mast;
+
+--15)
+---Created_by,Modified_by
+Select * from paytype_mast;
+
+--16)
+---Created_by,Modified_by
+Select * from trans_type_mast;
+
+--17)
+---Created_by,Modified_by
+Select * from company_mast;
+
+--18)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from emp_calenderdays;
+
+--19)
+---Created_by,Modified_by
+Select * from colour_mast;
+
+--20)
+---Created_by,Modified_by
+Select * from product_mast;
+
+--21)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from product_details;
+
+--22)
+---Created_by,Modified_by
+Select * from vendor_mast;
+
+--23)
+---Created_by,Modified_by
+Select * from customer_mast;
+
+--24)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from customer_details;
+
+--25)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from vendor_details;
+
+--26)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from employee_mast;
+
+--27)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from inward_mast;
+
+--28)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from inward_return;
+
+--29)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from salesinvoice_mast;
+
+--30)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from salesinvoicedetails;
+
+--31)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from challan_mast;
+
+--32)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from receipt_mast;
+
+--33)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from receipt_details;
+
+--34)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from purchaseinvoice_mast;
+
+--35)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from purchaseinvoice_details;
+
+--36)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from dailyconsumption_mast;
+
+--37)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from emp_leave_mast;
+
+--38)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from employee_payslip;
+
+--39)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from payment_mast;
+
+--40)
+---Created_by,Modified_by,comp_id,fin_year_id
+Select * from payment_details;
+
+
+
+
