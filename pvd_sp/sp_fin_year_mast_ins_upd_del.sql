@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_fin_year_mast_ins_upd_del]    Script Date: 03-12-2025 17:20:38 ******/
+/****** Object:  StoredProcedure [dbo].[sp_fin_year_mast_ins_upd_del]    Script Date: 16-12-2025 11:14:53 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -25,7 +25,8 @@ CREATE procedure [dbo].[sp_fin_year_mast_ins_upd_del]
 @year_end date = null,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = null
+@created_by bigint = null,
+@modified_by bigint = null
 )
 as
 BEGIN
@@ -34,7 +35,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -59,8 +60,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			END
 
 
-			insert into fin_year_mast(fin_name,short_fin_year,year_start,year_end,created_date,updated_date,user_id)
-			values(@fin_name,@short_fin_year,@year_start,@year_end,@created_date,@updated_date,@user_id);
+			insert into fin_year_mast(fin_name,short_fin_year,year_start,year_end,created_date,updated_date,created_by,modified_by)
+			values(@fin_name,@short_fin_year,@year_start,@year_end,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -87,7 +88,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			select fm.fin_year_id,fm.fin_name,fm.short_fin_year,fm.year_start,fm.year_end,
 			fm.created_date,fm.updated_date,um.user_name
 			from fin_year_mast fm
-			left join user_mast um on fm.user_id = um.user_id;
+			left join user_mast um on fm.created_by = um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -108,7 +109,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			select fm.fin_year_id,fm.fin_name,fm.short_fin_year,fm.year_start,fm.year_end,
-			fm.created_date,fm.updated_date,fm.user_id
+			fm.created_date,fm.updated_date,fm.created_by,fm.modified_by
 			from fin_year_mast fm
 			where fm.fin_year_id = @fin_year_id;
 		end try
@@ -202,7 +203,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 		begin try
 			begin transaction;
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -233,7 +234,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				year_end=@year_end,
 				created_date=@created_date,
 				updated_date=@updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by = @modified_by
 			where fin_year_id = @fin_year_id;
 			
 			if @@ROWCOUNT = 0

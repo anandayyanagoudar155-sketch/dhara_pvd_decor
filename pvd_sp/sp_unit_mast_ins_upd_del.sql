@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_unit_mast_ins_upd_del]    Script Date: 03-12-2025 18:25:21 ******/
+/****** Object:  StoredProcedure [dbo].[sp_unit_mast_ins_upd_del]    Script Date: 16-12-2025 12:46:15 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -18,7 +18,8 @@ CREATE procedure [dbo].[sp_unit_mast_ins_upd_del](
 @is_active bit=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -29,7 +30,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -39,8 +40,8 @@ begin
 					RAISERROR('Cannot insert: unit_name is already present', 16, 1);
 					return;
 			End
-			insert into unit_mast(unit_name,unit_desc,is_active,created_date,updated_date,user_id)
-			values(@unit_name,@unit_desc,@is_active,@created_date,@updated_date,@user_id)
+			insert into unit_mast(unit_name,unit_desc,is_active,created_date,updated_date,created_by,modified_by)
+			values(@unit_name,@unit_desc,@is_active,@created_date,@updated_date,@created_by,@modified_by)
 		commit transaction;
 	end try
 		begin catch
@@ -117,7 +118,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-		if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+		if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -133,7 +134,8 @@ begin
 			is_active=@is_active,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 				where unit_id=@unit_id
 				
 			if @@ROWCOUNT = 0
@@ -170,7 +172,7 @@ begin
 	begin try
 		select um.unit_id,um.unit_name,um.unit_desc,um.is_active,um.created_date,um.updated_date,usm.user_name 
 		from unit_mast um
-		left join user_mast usm on um.user_id=usm.user_id;
+		left join user_mast usm on um.created_by=usm.user_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -194,7 +196,7 @@ end
 if @action='selectone'
 begin
 		begin try
-				select unit_id,unit_name,unit_desc,is_active,created_date,updated_date,user_id from unit_mast where unit_id=@unit_id;
+				select unit_id,unit_name,unit_desc,is_active,created_date,updated_date,created_by,modified_by from unit_mast where unit_id=@unit_id;
 		end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();

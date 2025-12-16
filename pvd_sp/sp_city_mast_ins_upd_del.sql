@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_city_mast_ins_upd_del]    Script Date: 03-12-2025 17:01:47 ******/
+/****** Object:  StoredProcedure [dbo].[sp_city_mast_ins_upd_del]    Script Date: 16-12-2025 11:07:26 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -25,7 +25,8 @@ CREATE procedure [dbo].[sp_city_mast_ins_upd_del](
 @state_id bigint = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -35,7 +36,7 @@ if @action = 'insert'
 		begin try
 			begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -45,8 +46,8 @@ if @action = 'insert'
 					RAISERROR('Cannot insert: city_name is already present', 16, 1);
 					return;
 			End
-			insert into city_mast(city_name,state_id,created_date,updated_date,user_id)
-			values(@city_name,@state_id,@created_date,@updated_date,@user_id);
+			insert into city_mast(city_name,state_id,created_date,updated_date,created_by,modified_by)
+			values(@city_name,@state_id,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -74,7 +75,7 @@ if @action = 'insert'
 			select cm.city_id,cm.city_name,sm.state_name,cm.created_date,cm.updated_date,um.user_name 
 			from city_mast cm
 			left join state_mast sm on cm.state_id = sm.state_id
-			left join user_mast um on cm.user_id = um.user_id;	
+			left join user_mast um on cm.created_by = um.user_id;	
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -95,7 +96,7 @@ if @action = 'insert'
 	if @action = 'select one'
 	begin
 		begin try
-			select cm.city_id,cm.city_name,cm.state_id,cm.created_date,cm.updated_date,cm.user_id 
+			select cm.city_id,cm.city_name,cm.state_id,cm.created_date,cm.updated_date,cm.created_by,cm.modified_by 
 			from city_mast cm
 			where cm.city_id=@city_id;
 		end try
@@ -173,7 +174,7 @@ if @action = 'insert'
 		begin try
 			begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -188,7 +189,8 @@ if @action = 'insert'
 				state_id=@state_id,
 				created_date=@created_date,
 				updated_date=@updated_date,
-				user_id=@user_id
+				created_by=@created_by,
+				modified_by=@modified_by
 			where city_id = @city_id;
 
 			if @@ROWCOUNT = 0

@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_product_details_ins_upd_del]    Script Date: 03-12-2025 17:31:22 ******/
+/****** Object:  StoredProcedure [dbo].[sp_product_details_ins_upd_del]    Script Date: 16-12-2025 14:19:26 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -25,7 +26,8 @@ CREATE procedure [dbo].[sp_product_details_ins_upd_del](
 @updated_date date=null,
 @fin_year_id bigint=0,
 @comp_id bigint=0,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 
@@ -52,13 +54,13 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
 			End			
-			insert into product_details(product_id,opening_stock,purchase,sales,[return],reorder_threshold,reorder_desc,created_date,updated_date,fin_year_id,comp_id,user_id)
-			values(@product_id,@opening_stock,@purchase,@sales,@return,@reorder_threshold,@reorder_desc,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+			insert into product_details(product_id,opening_stock,purchase,sales,[return],reorder_threshold,reorder_desc,created_date,updated_date,fin_year_id,comp_id,created_by,modified_by)
+			values(@product_id,@opening_stock,@purchase,@sales,@return,@reorder_threshold,@reorder_desc,@created_date,@updated_date,@fin_year_id,@comp_id,@created_by,@modified_by);
 		commit transaction;
 	end try
 		begin catch
@@ -132,7 +134,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -150,7 +152,8 @@ begin
 			updated_date=@updated_date,
 			fin_year_id = @fin_year_id,
 			comp_id = @comp_id,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where 
 			product_details_id=@product_details_id;
 			
@@ -205,7 +208,7 @@ begin
 		left join product_mast b on a.product_id=b.product_id
 		left join fin_year_mast c on a.fin_year_id=c.fin_year_id
 		left join company_mast d on a.comp_id=d.comp_id
-		left join user_mast um on a.user_id=um.user_id;
+		left join user_mast um on a.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -243,7 +246,8 @@ begin
 		updated_date,
 		fin_year_id,
 		comp_id,
-		user_id 
+		created_by,
+		modified_by
 		from product_details 
 		where product_details_id=@product_details_id;
 	end try

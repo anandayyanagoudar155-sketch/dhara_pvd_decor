@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_trans_type_mast_ins_upd_del]    Script Date: 03-12-2025 18:24:46 ******/
+/****** Object:  StoredProcedure [dbo].[sp_trans_type_mast_ins_upd_del]    Script Date: 16-12-2025 14:00:34 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -22,7 +22,8 @@ CREATE procedure [dbo].[sp_trans_type_mast_ins_upd_del]
 @transtype_desc varchar(max) = '',
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -31,7 +32,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -41,8 +42,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: transtype_name is already present', 16, 1);
 					return;
 			End
-			insert into trans_type_mast(transtype_name,transtype_desc,created_date,updated_date,user_id)
-			values(@transtype_name,@transtype_desc,@created_date,@updated_date,@user_id);
+			insert into trans_type_mast(transtype_name,transtype_desc,created_date,updated_date,created_by,modified_by)
+			values(@transtype_name,@transtype_desc,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -69,7 +70,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select ttm.trans_id,ttm.transtype_name,ttm.transtype_desc,ttm.created_date,ttm.updated_date,
 			um.user_name
 			from trans_type_mast ttm
-			left join user_mast um on ttm.user_id = um.user_id;
+			left join user_mast um on ttm.created_by = um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -90,7 +91,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			Select ttm.trans_id,ttm.transtype_name,ttm.transtype_desc,ttm.created_date,ttm.updated_date,
-			ttm.user_id
+			ttm.created_by,ttm.modified_by
 			from trans_type_mast ttm
 			where ttm.trans_id = @trans_id;
 		end try
@@ -153,7 +154,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -168,7 +169,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				transtype_desc = @transtype_desc,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by = @modified_by
 			where trans_id = @trans_id;
 
 			if @@ROWCOUNT = 0

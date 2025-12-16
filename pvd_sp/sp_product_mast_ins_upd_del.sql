@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_product_mast_ins_upd_del]    Script Date: 03-12-2025 17:32:58 ******/
+/****** Object:  StoredProcedure [dbo].[sp_product_mast_ins_upd_del]    Script Date: 16-12-2025 14:15:01 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -22,7 +22,8 @@ CREATE procedure [dbo].[sp_product_mast_ins_upd_del](
 @rate decimal(12,2)=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 
@@ -34,7 +35,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -65,8 +66,8 @@ begin
 					return;
 			End
 			
-			insert into product_mast(prodtype_id,brand_id,hsn_id,unit_id,product_name,product_desc,rate,created_date,updated_date,user_id)
-			values(@prodtype_id,@brand_id,@hsn_id,@unit_id,@product_name,@product_desc,@rate,@created_date,@updated_date,@user_id);
+			insert into product_mast(prodtype_id,brand_id,hsn_id,unit_id,product_name,product_desc,rate,created_date,updated_date,created_by,modified_by)
+			values(@prodtype_id,@brand_id,@hsn_id,@unit_id,@product_name,@product_desc,@rate,@created_date,@updated_date,@created_by,@modified_by);
 		commit transaction;
 	end try
 		begin catch
@@ -146,7 +147,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -188,7 +189,8 @@ begin
 			rate=@rate,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where product_id=@product_id;
 			
 		if @@ROWCOUNT = 0
@@ -243,7 +245,7 @@ begin
 		left join brand_mast c on a.brand_id=c.brand_id
 		left join hsn_mast d on a.hsn_id=d.hsn_id
 		left join unit_mast e on a.unit_id=e.unit_id
-		left join user_mast um on a.user_id=um.user_id;
+		left join user_mast um on a.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -277,7 +279,8 @@ begin
 		rate,
 		created_date,
 		updated_date,
-		user_id from product_mast where product_id=@product_id;
+		created_by,
+		modified_by from product_mast where product_id=@product_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();

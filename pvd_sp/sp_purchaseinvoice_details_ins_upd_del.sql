@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_details_ins_upd_del]    Script Date: 03-12-2025 17:41:05 ******/
+/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_details_ins_upd_del]    Script Date: 16-12-2025 15:41:45 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -46,7 +47,8 @@ CREATE procedure [dbo].[sp_purchaseinvoice_details_ins_upd_del](
 @updated_date date = null,
 @fin_year_id bigint = 0,
 @comp_id bigint = 0,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -102,7 +104,7 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -112,10 +114,10 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 			insert into purchaseinvoice_details(purchase_id,product_id,colour_id,unit_id,length,width,height,
 			kg,liters,totalsqf_runningfeet,rate,gross_amt,totalquantity,sgst_perc,sgst_amt,cgst_perc,cgst_amt,
 			igst_perc,igst_amt,discount_perc,discount_amt,total_amt,created_date,updated_date,fin_year_id,
-			comp_id,user_id)
+			comp_id,created_by,modified_by)
 			values(@purchase_id,@product_id,@colour_id,@unit_id,@length,@width,@height,@kg,@liters,@totalsqf_runningfeet,
 			@rate,@gross_amt,@totalquantity,@sgst_perc,@sgst_amt,@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,
-			@discount_amt,@total_amt,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+			@discount_amt,@total_amt,@created_date,@updated_date,@fin_year_id,@comp_id,@created_by,@modified_by);
 
 			set @vendor_id = isnull((Select distinct vendor_id from purchaseinvoice_details pid 
 								inner join purchaseinvoice_mast pim on pid.purchase_id=pim.purchase_id
@@ -239,7 +241,7 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 			pid.discount_amt,pid.total_amt,pid.created_date,pid.updated_date,fym.fin_name,cm.comp_name,um.user_name
 			from purchaseinvoice_details pid
 			left join purchaseinvoice_mast pim on pid.purchase_id = pim.purchase_id
-			left join user_mast um on pid.user_id = um.user_id
+			left join user_mast um on pid.created_by = um.user_id
 			left join company_mast cm on pid.comp_id = cm.comp_id
 			left join fin_year_mast fym on pid.fin_year_id = fym.fin_year_id
 			left join product_mast pm on pid.product_id = pm.product_id
@@ -269,7 +271,7 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 			Select pid.purchase_detail_id,pid.purchase_id,pid.product_id,pid.colour_id,pid.unit_id,pid.length,
 			pid.width,pid.height,pid.kg,pid.liters,pid.totalsqf_runningfeet,pid.rate,pid.gross_amt,pid.totalquantity,
 			pid.sgst_perc,pid.sgst_amt,pid.cgst_perc,pid.cgst_amt,pid.igst_perc,pid.igst_amt,pid.discount_perc,
-			pid.discount_amt,pid.total_amt,pid.created_date,pid.updated_date,pid.fin_year_id,pid.comp_id,pid.user_id
+			pid.discount_amt,pid.total_amt,pid.created_date,pid.updated_date,pid.fin_year_id,pid.comp_id,pid.created_by,pid.modified_by
 			from purchaseinvoice_details pid
 			where pid.purchase_detail_id=@purchase_detail_id;
 		end try
@@ -442,7 +444,7 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -481,7 +483,8 @@ set @total_amt = isnull(((@gross_amt + @sgst_amt + @cgst_amt + @igst_amt) - @dis
 				updated_date = @updated_date,
 				fin_year_id = @fin_year_id,
 				comp_id = @comp_id,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 			where purchase_detail_id = @purchase_detail_id;
 
 			set @vendor_id = isnull((Select distinct vendor_id from purchaseinvoice_details pid 

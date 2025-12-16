@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_paytype_mast_ins_upd_del]    Script Date: 03-12-2025 17:26:34 ******/
+/****** Object:  StoredProcedure [dbo].[sp_paytype_mast_ins_upd_del]    Script Date: 16-12-2025 13:09:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -17,7 +17,8 @@ CREATE procedure [dbo].[sp_paytype_mast_ins_upd_del](
 @paytype_desc varchar(max)='',
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -29,7 +30,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -39,8 +40,8 @@ begin
 					RAISERROR('Cannot insert: paytype_name is already present', 16, 1);
 					return;
 			End
-			insert into paytype_mast(paytype_name,paytype_desc,created_date,updated_date,user_id)
-			values(@paytype_name,@paytype_desc,@created_date,@updated_date,@user_id)
+			insert into paytype_mast(paytype_name,paytype_desc,created_date,updated_date,created_by,modified_by)
+			values(@paytype_name,@paytype_desc,@created_date,@updated_date,@created_by,@modified_by)
 		commit transaction;
 	end try
 		begin catch
@@ -111,7 +112,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -126,7 +127,8 @@ begin
 			paytype_desc=@paytype_desc,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 				where paytype_id=@paytype_id
 			
 		if @@ROWCOUNT = 0
@@ -163,7 +165,7 @@ begin
 	begin try
 		select pty.paytype_id,pty.paytype_name,pty.paytype_desc,pty.created_date,pty.updated_date,um.user_name 
 		from paytype_mast pty
-		left join user_mast um on pty.user_id=um.user_id;
+		left join user_mast um on pty.created_by=um.user_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -185,7 +187,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select paytype_id,paytype_name,paytype_desc,created_date,updated_date,user_id from paytype_mast where paytype_id=@paytype_id;
+		select paytype_id,paytype_name,paytype_desc,created_date,updated_date,created_by,modified_by from paytype_mast where paytype_id=@paytype_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();

@@ -1,14 +1,12 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_customer_details_ins_upd_del]    Script Date: 03-12-2025 17:09:20 ******/
+/****** Object:  StoredProcedure [dbo].[sp_customer_details_ins_upd_del]    Script Date: 16-12-2025 14:30:45 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
-
 
 
 
@@ -24,7 +22,8 @@ CREATE procedure [dbo].[sp_customer_details_ins_upd_del](
 @updated_date date = null,	
 @fin_year_id  bigint=0,	
 @comp_id bigint=0,	
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -50,7 +49,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -62,8 +61,8 @@ begin
 					return;
 			End
 			
-			insert into customer_details(customer_id,opening_balance,Invoice_balance,Outstanding_balance,created_date,updated_date,fin_year_id,comp_id,user_id)
-			values(@customer_id,@opening_balance,@Invoice_balance,@Outstanding_balance,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+			insert into customer_details(customer_id,opening_balance,Invoice_balance,Outstanding_balance,created_date,updated_date,fin_year_id,comp_id,created_by,modified_by)
+			values(@customer_id,@opening_balance,@Invoice_balance,@Outstanding_balance,@created_date,@updated_date,@fin_year_id,@comp_id,@created_by,@modified_by);
 			;WITH cte AS (
 				SELECT *,
 					   ROW_NUMBER() OVER (ORDER BY fin_year_id) AS rn
@@ -177,7 +176,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -230,7 +229,8 @@ begin
 			updated_date=@updated_date,
 			fin_year_id=@fin_year_id,
 			comp_id = @comp_id,
-			user_id = @user_id
+			created_by = @created_by,
+			modified_by = @modified_by
 				where customer_details_id=@customer_details_id
 				
 			if @@ROWCOUNT = 0
@@ -275,12 +275,12 @@ begin
 			cd.updated_date,
 			fym.fin_year_id,
 			cpm.comp_id,
-			um.user_id			
+			um.user_name			
 		from customer_details cd
 		left join customer_mast cm on cd.customer_id=cm.customer_id
 		left join fin_year_mast fym on cd.fin_year_id=fym.fin_year_id
 		left join company_mast cpm on cd.comp_id = cpm.comp_id
-		left join user_mast um on cd.user_id=um.user_id;
+		left join user_mast um on cd.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -313,7 +313,8 @@ begin
 			cd.updated_date,
 			cd.fin_year_id,
 			cd.comp_id,
-			cd.user_id			
+			cd.created_by,	
+			cd.modified_by
 		from customer_details cd
 		where customer_details_id = @customer_details_id;
 		

@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_state_mast_ins_upd_del]    Script Date: 03-12-2025 18:23:57 ******/
+/****** Object:  StoredProcedure [dbo].[sp_state_mast_ins_upd_del]    Script Date: 16-12-2025 10:41:14 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -23,7 +23,8 @@ CREATE procedure [dbo].[sp_state_mast_ins_upd_del](
 @country_id bigint = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -33,7 +34,7 @@ if @action = 'insert'
 		begin try
 			begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -44,8 +45,8 @@ if @action = 'insert'
 					return;
 			End
 
-			insert into state_mast(state_name,country_id,created_date,updated_date,user_id)
-			values(@state_name,@country_id,@created_date,@updated_date,@user_id);
+			insert into state_mast(state_name,country_id,created_date,updated_date,created_by,modified_by)
+			values(@state_name,@country_id,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -73,7 +74,7 @@ if @action = 'insert'
 			select sm.state_id,sm.state_name,cm.country_name,sm.created_date,sm.updated_date,um.user_name 
 			from state_mast sm
 			left join country_mast cm on sm.country_id = cm.country_id
-			left join user_mast um on sm.user_id=um.user_id;	
+			left join user_mast um on sm.created_by=um.user_id;	
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -94,7 +95,7 @@ if @action = 'insert'
 	if @action = 'select one'
 	begin
 		begin try
-			select sm.state_id,sm.state_name,sm.country_id,sm.created_date,sm.updated_date,sm.user_id 
+			select sm.state_id,sm.state_name,sm.country_id,sm.created_date,sm.updated_date,sm.created_by,sm.modified_by 
 			from state_mast sm	
 			where sm.state_id=@state_id;
 		end try
@@ -160,7 +161,7 @@ if @action = 'insert'
 		begin try
 			begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -175,7 +176,8 @@ if @action = 'insert'
 				country_id=@country_id,
 				created_date=@created_date,
 				updated_date=@updated_date,
-				user_id=@user_id
+				created_by=@created_by,
+				modified_by=@modified_by
 			where state_id = @state_id;
 
 			if @@ROWCOUNT = 0

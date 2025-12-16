@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_company_mast_ins_upd_del]    Script Date: 03-12-2025 17:04:35 ******/
+/****** Object:  StoredProcedure [dbo].[sp_company_mast_ins_upd_del]    Script Date: 16-12-2025 10:35:14 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -32,7 +32,8 @@ CREATE procedure [dbo].[sp_company_mast_ins_upd_del](
 @created_date date=null,
 @updated_date date=null,
 @logo_path varchar(max)='',
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -45,7 +46,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -79,8 +80,8 @@ begin
 			created_date,
 			updated_date,
 			logo_path,
-			user_id)
-
+			created_by,
+			modified_by)
 			values(
 			@comp_code,
 			@comp_name,
@@ -101,8 +102,8 @@ begin
 			@created_date,
 			@updated_date,
 			@logo_path,
-			@user_id
-			);
+			@created_by,
+			@modified_by);
 			
 		commit transaction;
 	end try
@@ -202,7 +203,7 @@ begin
 	begin try
 		begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -237,7 +238,8 @@ begin
 			created_date=@created_date,
 			updated_date=@updated_date,
 			logo_path=@logo_path,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where comp_id=@comp_id;
 				
 		if @@ROWCOUNT = 0
@@ -296,7 +298,7 @@ begin
 		um.user_name 
 		from company_mast cm
 		left join city_mast ctm on cm.city_id=ctm.city_id
-		left join user_mast um on cm.user_id=um.user_id;
+		left join user_mast um on cm.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -341,7 +343,9 @@ begin
 		created_date,
 		updated_date,
 		logo_path,
-		user_id from company_mast where comp_id=@comp_id ;
+		created_by,
+		modified_by
+		from company_mast where comp_id=@comp_id ;
 	
 	end try
 	begin catch

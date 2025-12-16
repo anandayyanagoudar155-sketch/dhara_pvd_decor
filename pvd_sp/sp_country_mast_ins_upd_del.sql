@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_country_mast_ins_upd_del]    Script Date: 03-12-2025 17:05:36 ******/
+/****** Object:  StoredProcedure [dbo].[sp_country_mast_ins_upd_del]    Script Date: 16-12-2025 10:34:41 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -26,7 +26,8 @@ CREATE procedure [dbo].[sp_country_mast_ins_upd_del](
 @country_name varchar(100) = '',
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -36,7 +37,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					print 1
@@ -47,8 +48,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: country_name is already present', 16, 1);
 					return;
 			End
-			insert into country_mast(country_name,created_date,updated_date,user_id)
-			values(@country_name,@created_date,@updated_date,@user_id);
+			insert into country_mast(country_name,created_date,updated_date,created_by,modified_by)
+			values(@country_name,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -75,7 +76,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 		begin try
 			select cm.country_id,cm.country_name,cm.created_date,cm.updated_date,um.user_name 
 			from country_mast cm
-			left join user_mast um on cm.user_id=um.user_id;	
+			left join user_mast um on cm.created_by=um.user_id;	
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -96,7 +97,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	if @action = 'select one'
 	begin
 		begin try
-			select cm.country_id,cm.country_name,cm.created_date,cm.updated_date,cm.user_id 
+			select cm.country_id,cm.country_name,cm.created_date,cm.updated_date,cm.created_by,cm.modified_by
 			from country_mast cm
 			where cm.country_id=@country_id;
 		end try
@@ -162,7 +163,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 		begin try
 			begin transaction
 
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					print 1
@@ -179,7 +180,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			set country_name=@country_name,
 				created_date=@created_date,
 				updated_date=@updated_date,
-				user_id=@user_id
+				created_by=@created_by,
+				modified_by=@modified_by
 			where country_id = @country_id;
 
 			if @@ROWCOUNT = 0

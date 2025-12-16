@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_receipt_details_ins_upd_del]    Script Date: 03-12-2025 18:03:27 ******/
+/****** Object:  StoredProcedure [dbo].[sp_receipt_details_ins_upd_del]    Script Date: 16-12-2025 15:16:30 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -33,7 +34,8 @@ CREATE procedure [dbo].[sp_receipt_details_ins_upd_del](
 @comp_id bigint=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -63,8 +65,8 @@ begin
 			rollback transaction;
 			return;
 		end
-			insert into receipt_details(receipt_id,paytype_id,trans_type_id,total_amt,cheque_number,cheque_bankname,ifsc_code,cheque_date,account_number,transaction_id,card_number,transaction_date,fin_year_id,comp_id,created_date,updated_date,user_id)
-			values(@receipt_id,@paytype_id,@trans_type_id,@total_amt,@cheque_number,@cheque_bankname,@ifsc_code,@cheque_date,@account_number,@transaction_id,@card_number,@transaction_date,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			insert into receipt_details(receipt_id,paytype_id,trans_type_id,total_amt,cheque_number,cheque_bankname,ifsc_code,cheque_date,account_number,transaction_id,card_number,transaction_date,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by)
+			values(@receipt_id,@paytype_id,@trans_type_id,@total_amt,@cheque_number,@cheque_bankname,@ifsc_code,@cheque_date,@account_number,@transaction_id,@card_number,@transaction_date,@fin_year_id,@comp_id,@created_date,@updated_date,@created_by,@modified_by);
 
 			Update receipt_mast
 			set net_total = isnull((select SUM(total_amt) 
@@ -423,7 +425,8 @@ begin
 			comp_id=@comp_id,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where receipt_dtl_id=@receipt_dtl_id;
 
 			Update receipt_mast
@@ -593,13 +596,13 @@ begin
 	begin try
 		select rd.receipt_dtl_id,rm.receipt_id,pym.paytype_id,rd.total_amt,rd.cheque_number,rd.ifsc_code,rd.cheque_date,
 		rd.account_number,rd.transaction_id,rd.card_number,rd.transaction_date,fym.fin_name,cm.comp_name,rd.created_date,
-		rd.updated_date,um.user_id 
+		rd.updated_date,um.user_name 
 		from receipt_details rd 
 		left join receipt_mast rm on rd.receipt_id=rm.receipt_id
 		left join paytype_mast pym on rd.paytype_id=pym.paytype_id
 		left join fin_year_mast fym on rd.fin_year_id=fym.fin_year_id
 		left join company_mast cm on rd.comp_id=cm.comp_id
-		left join user_mast um on rd.user_id=um.user_id;
+		left join user_mast um on rd.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -622,7 +625,7 @@ end
 if @action='selectone'
 begin
 		begin try
-		select receipt_dtl_id,receipt_id,paytype_id,total_amt,cheque_number,ifsc_code,cheque_date,account_number,transaction_id,card_number,transaction_date,fin_year_id,comp_id,created_date,updated_date,user_id from receipt_details where receipt_dtl_id=@receipt_dtl_id;
+		select receipt_dtl_id,receipt_id,paytype_id,total_amt,cheque_number,ifsc_code,cheque_date,account_number,transaction_id,card_number,transaction_date,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by from receipt_details where receipt_dtl_id=@receipt_dtl_id;
 		end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();

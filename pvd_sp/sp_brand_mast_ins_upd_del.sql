@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_brand_mast_ins_upd_del]    Script Date: 03-12-2025 16:59:10 ******/
+/****** Object:  StoredProcedure [dbo].[sp_brand_mast_ins_upd_del]    Script Date: 16-12-2025 11:23:56 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -17,7 +17,8 @@ CREATE procedure [dbo].[sp_brand_mast_ins_upd_del](
 @brand_desc varchar(max)='',
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -28,7 +29,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -38,8 +39,8 @@ begin
 					RAISERROR('Cannot insert: brand_name is already present', 16, 1);
 					return;
 			End
-			insert into brand_mast(brand_name,brand_desc,created_date,updated_date,user_id)
-			values(@brand_name,@brand_desc,@created_date,@updated_date,@user_id);
+			insert into brand_mast(brand_name,brand_desc,created_date,updated_date,created_by,modified_by)
+			values(@brand_name,@brand_desc,@created_date,@updated_date,@created_by,@modified_by);
 		commit transaction;
 	end try
 		begin catch
@@ -111,7 +112,7 @@ begin
 	begin try
 		begin transaction
 
-		if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+		if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -127,7 +128,8 @@ begin
 			brand_desc=@brand_desc,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where brand_id=@brand_id
 				
 		if @@ROWCOUNT = 0
@@ -164,7 +166,7 @@ begin
 	begin try
 		select bm.brand_id,bm.brand_name,bm.brand_desc,bm.created_date,bm.updated_date,um.user_name 
 		from brand_mast bm
-		left join user_mast um on bm.user_id=um.user_id;
+		left join user_mast um on bm.created_by=um.user_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -187,7 +189,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select brand_id,brand_name,brand_desc,created_date,updated_date,user_id from brand_mast where brand_id=@brand_id;
+		select brand_id,brand_name,brand_desc,created_date,updated_date,created_by,modified_by from brand_mast where brand_id=@brand_id;
 	end try
 	begin catch
 		set @ErrorNumber = ERROR_NUMBER();

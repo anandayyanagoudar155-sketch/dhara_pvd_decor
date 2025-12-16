@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_inward_mast_ins_upd_del]    Script Date: 03-12-2025 17:22:32 ******/
+/****** Object:  StoredProcedure [dbo].[sp_inward_mast_ins_upd_del]    Script Date: 16-12-2025 14:43:18 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -27,7 +27,8 @@ CREATE procedure [dbo].[sp_inward_mast_ins_upd_del](
 @comp_id bigint=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -58,14 +59,14 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
 			End	
 			set @balance = @totalquantity;
-			insert into inward_mast(customer_id,product_id,totalquantity,balance_quantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id)
-			values(@customer_id,@product_id,@totalquantity,@balance,@inward_status,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			insert into inward_mast(customer_id,product_id,totalquantity,balance_quantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by)
+			values(@customer_id,@product_id,@totalquantity,@balance,@inward_status,@remarks,@fin_year_id,@comp_id,@created_date,@updated_date,@created_by,@modified_by);
 	commit transaction;
 	end try
 		begin catch
@@ -157,7 +158,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -174,7 +175,8 @@ begin
 			comp_id=@comp_id,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where inward_id=@inward_id;
 			
 			
@@ -222,13 +224,13 @@ begin
 		cm.comp_id,
 		a.created_date,
 		a.updated_date,
-		um.user_id 
+		um.user_name 
 		from inward_mast a
 		left join customer_mast b on a.customer_id=b.customer_id
 		left join product_mast c on a.product_id=c.product_id
 		left join fin_year_mast fym on a.fin_year_id=fym.fin_year_id
 		left join company_mast cm on a.comp_id=cm.comp_id
-		left join user_mast um on a.user_id=um.user_id;
+		left join user_mast um on a.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -252,7 +254,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select inward_id,customer_id,product_id,totalquantity,balance_quantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,user_id from inward_mast where inward_id=@inward_id;
+		select inward_id,customer_id,product_id,totalquantity,balance_quantity,inward_status,remarks,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by from inward_mast where inward_id=@inward_id;
 	end try
 	begin catch
 		set @ErrorNumber = ERROR_NUMBER();

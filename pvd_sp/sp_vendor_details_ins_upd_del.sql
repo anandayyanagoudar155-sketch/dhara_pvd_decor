@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_vendor_details_ins_upd_del]    Script Date: 03-12-2025 18:30:41 ******/
+/****** Object:  StoredProcedure [dbo].[sp_vendor_details_ins_upd_del]    Script Date: 16-12-2025 15:29:29 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -23,7 +24,8 @@ CREATE procedure [dbo].[sp_vendor_details_ins_upd_del](
 @updated_date date = null,	
 @fin_year_id  bigint=0,	
 @comp_id bigint=0,	
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -49,7 +51,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -61,8 +63,8 @@ begin
 					return;
 			End
 			
-			insert into vendor_details(vendor_id,opening_balance,Invoice_balance,Outstanding_balance,created_date,updated_date,fin_year_id,comp_id,user_id)
-			values(@vendor_id,@opening_balance,@Invoice_balance,@Outstanding_balance,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+			insert into vendor_details(vendor_id,opening_balance,Invoice_balance,Outstanding_balance,created_date,updated_date,fin_year_id,comp_id,created_by,modified_by)
+			values(@vendor_id,@opening_balance,@Invoice_balance,@Outstanding_balance,@created_date,@updated_date,@fin_year_id,@comp_id,@created_by,@modified_by);
 			;WITH cte AS (
 				SELECT *,
 					   ROW_NUMBER() OVER (ORDER BY fin_year_id) AS rn
@@ -175,7 +177,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -227,7 +229,8 @@ begin
 			updated_date=@updated_date,
 			fin_year_id=@fin_year_id,
 			comp_id = @comp_id,
-			user_id = @user_id
+			created_by = @created_by,
+			modified_by = @modified_by
 				where vendor_details_id=@vendor_details_id
 				
 			if @@ROWCOUNT = 0
@@ -272,12 +275,12 @@ begin
 			vd.updated_date,
 			fym.fin_year_id,
 			cpm.comp_id,
-			um.user_id			
+			um.user_name			
 		from vendor_details vd
 		left join vendor_mast vm on vd.vendor_id=vm.vendor_id
 		left join fin_year_mast fym on vd.fin_year_id=fym.fin_year_id
 		left join company_mast cpm on vd.comp_id = cpm.comp_id
-		left join user_mast um on vd.user_id=um.user_id;
+		left join user_mast um on vd.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -310,7 +313,8 @@ begin
 			vd.updated_date,
 			vd.fin_year_id,
 			vd.comp_id,
-			vd.user_id			
+			vd.created_by,
+			vd.modified_by
 		from vendor_details vd
 		where vendor_details_id = @vendor_details_id;
 		

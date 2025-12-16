@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_month_mast_ins_upd_del]    Script Date: 03-12-2025 17:25:27 ******/
+/****** Object:  StoredProcedure [dbo].[sp_month_mast_ins_upd_del]    Script Date: 16-12-2025 12:39:55 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -26,7 +26,8 @@ CREATE procedure [dbo].[sp_month_mast_ins_upd_del]
 @end_date date = null,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -35,7 +36,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -46,8 +47,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					return;
 			End
 
-			insert into month_mast(month_name,start_date,end_date,created_date,updated_date,user_id)
-			values(@month_name,@start_date,@end_date,@created_date,@updated_date,@user_id);
+			insert into month_mast(month_name,start_date,end_date,created_date,updated_date,created_by,modified_by)
+			values(@month_name,@start_date,@end_date,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -73,7 +74,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 		begin try
 			Select mm.month_id,mm.month_name,mm.start_date,mm.end_date,mm.created_date,mm.updated_date,um.user_name  
 			from month_mast mm
-			left join user_mast um on mm.user_id=um.user_id;
+			left join user_mast um on mm.created_by=um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -93,7 +94,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	if @action = 'select one'
 	begin
 		begin try
-			Select mm.month_id,mm.month_name,mm.start_date,mm.end_date,mm.created_date,mm.updated_date,mm.user_id  
+			Select mm.month_id,mm.month_name,mm.start_date,mm.end_date,mm.created_date,mm.updated_date,mm.created_by,mm.modified_by  
 			from month_mast mm
 			where mm.month_id=@month_id
 		end try
@@ -158,7 +159,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where  user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -174,7 +175,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				end_date = @end_date,
 				created_date=@created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 			where month_id = @month_id;
 
 			if @@ROWCOUNT = 0

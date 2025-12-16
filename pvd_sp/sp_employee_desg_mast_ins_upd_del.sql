@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_employee_desg_mast_ins_upd_del]    Script Date: 03-12-2025 17:18:58 ******/
+/****** Object:  StoredProcedure [dbo].[sp_employee_desg_mast_ins_upd_del]    Script Date: 16-12-2025 15:50:57 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -24,7 +25,8 @@ CREATE procedure [dbo].[sp_employee_desg_mast_ins_upd_del]
 @daily_wk_hr decimal(5,2) = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint =0
+@created_by bigint =0,
+@modified_by bigint =0
 )
 as
 BEGIN
@@ -33,7 +35,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -43,8 +45,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: desg_name is already present', 16, 1);
 					return;
 			End
-			insert into employee_desg_mast(desg_name,desg_desc,daily_wk_hr,created_date,updated_date,user_id)
-			values(@desg_name,@desg_desc,@daily_wk_hr,@created_date,@updated_date,@user_id);
+			insert into employee_desg_mast(desg_name,desg_desc,daily_wk_hr,created_date,updated_date,created_by,modified_by)
+			values(@desg_name,@desg_desc,@daily_wk_hr,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -71,7 +73,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select edm.desg_id,edm.desg_name,edm.desg_desc,edm.daily_wk_hr,edm.created_date,
 			edm.updated_date,um.user_name
 			from employee_desg_mast edm
-			left join user_mast um on edm.user_id = um.user_id;
+			left join user_mast um on edm.created_by = um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -92,7 +94,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			Select edm.desg_id,edm.desg_name,edm.desg_desc,edm.daily_wk_hr,edm.created_date,
-			edm.updated_date,edm.user_id
+			edm.updated_date,edm.created_by,edm.modified_by
 			from employee_desg_mast edm
 			where edm.desg_id = @desg_id;
 		end try
@@ -153,7 +155,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -169,7 +171,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				daily_wk_hr = @daily_wk_hr,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 			where desg_id = @desg_id;
 
 			if @@ROWCOUNT = 0

@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del]    Script Date: 03-12-2025 17:48:03 ******/
+/****** Object:  StoredProcedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del]    Script Date: 16-12-2025 15:37:20 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -39,7 +40,8 @@ CREATE procedure [dbo].[sp_purchaseinvoice_mast_ins_upd_del](
 @comp_id bigint = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -68,7 +70,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -87,10 +89,10 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			
 			insert into purchaseinvoice_mast(prefix,suffix,invoive_no,purchase_date,vendor_id,gross_total,
 			sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,paymentstatus,
-			is_active,fin_year_id,comp_id,created_date,updated_date,user_id)
+			is_active,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by)
 			values(@prefix,@suffix,@invoive_no,@purchase_date,@vendor_id,@gross_total,@sgst_total,
 			@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@balance_total,@paymentstatus,
-			@is_active,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			@is_active,@fin_year_id,@comp_id,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -120,7 +122,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			pim.net_total,pim.balance_total,pim.paymentstatus,pim.is_active,fym.fin_name,cm.comp_name,pim.created_date,
 			pim.updated_date,um.user_name
 			from purchaseinvoice_mast pim
-			left join user_mast um on pim.user_id = um.user_id
+			left join user_mast um on pim.created_by = um.user_id
 			left join company_mast cm on pim.comp_id = cm.comp_id
 			left join fin_year_mast fym on pim.fin_year_id = fym.fin_year_id
 			left join vendor_mast vm on pim.vendor_id = vm.vendor_id;
@@ -147,7 +149,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select pim.purchase_id,pim.prefix,pim.suffix,pim.invoive_no,pim.purchase_date,pim.vendor_id,
 			pim.gross_total,pim.sgst_total,pim.cgst_total,pim.igst_total,pim.discount_total,pim.roundoff_total,
 			pim.net_total,pim.balance_total,pim.paymentstatus,pim.is_active,pim.fin_year_id,pim.comp_id,pim.created_date,
-			pim.updated_date,pim.user_id
+			pim.updated_date,pim.created_by,pim.modified_by
 			from purchaseinvoice_mast pim
 			where pim.purchase_id=@purchase_id;
 		end try
@@ -257,7 +259,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				comp_id = @comp_id,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 				where purchase_id = @purchase_id;
 
 			

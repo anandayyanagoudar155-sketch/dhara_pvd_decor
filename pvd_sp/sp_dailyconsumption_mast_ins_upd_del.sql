@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_dailyconsumption_mast_ins_upd_del]    Script Date: 03-12-2025 17:13:51 ******/
+/****** Object:  StoredProcedure [dbo].[sp_dailyconsumption_mast_ins_upd_del]    Script Date: 16-12-2025 15:47:12 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -22,7 +23,8 @@ CREATE procedure [dbo].[sp_dailyconsumption_mast_ins_upd_del](
 @comp_id bigint = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 Begin
@@ -53,7 +55,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -70,9 +72,9 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			End
 
 			insert into dailyconsumption_mast(dailycons_date,product_id,unit_id,quantityconsumed,purpose,fin_year_id,
-			comp_id,created_date,updated_date,user_id)
+			comp_id,created_date,updated_date,created_by,modified_by)
 			values(@dailycons_date,@product_id,@unit_id,@quantityconsumed,@purpose,@fin_year_id,@comp_id,
-			@created_date,@updated_date,@user_id);
+			@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -100,7 +102,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select dcm.dailycons_id,dcm.dailycons_date,pm.product_name,utm.unit_name,dcm.quantityconsumed,
 			dcm.purpose,fym.fin_name,cm.comp_name,dcm.created_date,dcm.updated_date,um.user_name
 			from dailyconsumption_mast dcm
-			left join user_mast um on dcm.user_id = um.user_id
+			left join user_mast um on dcm.created_by = um.user_id
 			left join company_mast cm on dcm.comp_id = cm.comp_id
 			left join fin_year_mast fym on dcm.fin_year_id = fym.fin_year_id
 			left join product_mast pm on dcm.product_id = pm.product_id
@@ -126,7 +128,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			Select dcm.dailycons_id,dcm.dailycons_date,dcm.product_id,dcm.unit_id,dcm.quantityconsumed,
-			dcm.purpose,dcm.fin_year_id,dcm.comp_id,dcm.created_date,dcm.updated_date,dcm.user_id
+			dcm.purpose,dcm.fin_year_id,dcm.comp_id,dcm.created_date,dcm.updated_date,dcm.created_by,dcm.modified_by
 			from dailyconsumption_mast dcm
 			where dcm.dailycons_id=@dailycons_id;
 		end try
@@ -198,7 +200,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -224,7 +226,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				comp_id = @comp_id,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 			where dailycons_id = @dailycons_id;
 
 			if @@ROWCOUNT = 0

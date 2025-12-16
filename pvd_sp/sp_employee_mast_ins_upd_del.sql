@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_employee_mast_ins_upd_del]    Script Date: 03-12-2025 17:19:45 ******/
+/****** Object:  StoredProcedure [dbo].[sp_employee_mast_ins_upd_del]    Script Date: 16-12-2025 16:09:21 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -40,7 +41,8 @@ CREATE procedure [dbo].[sp_employee_mast_ins_upd_del]
 @updated_date date = null,
 @fin_year_id bigint = 0,
 @comp_id bigint = 0,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -69,17 +71,17 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
 			End
 			insert into employee_mast(desg_id,first_name,last_name,gender,dob,phone_number,emailid,[address],
 			city_id,aadhaar_number,pan_number,bankaccount_no,ifsc_code,joining_date,relieving_date,education,
-			exp_year,annual_salary,active_status,created_date,updated_date,fin_year_id,comp_id,user_id)
+			exp_year,annual_salary,active_status,created_date,updated_date,fin_year_id,comp_id,created_by,modified_by)
 			values(@desg_id,@first_name,@last_name,@gender,@dob,@phone_number,@emailid,@address,@city_id,
 			@aadhaar_number,@pan_number,@bankaccount_no,@ifsc_code,@joining_date,@relieving_date,@education,
-			@exp_year,@annual_salary,@active_status,@created_date,@updated_date,@fin_year_id,@comp_id,@user_id);
+			@exp_year,@annual_salary,@active_status,@created_date,@updated_date,@fin_year_id,@comp_id,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -108,7 +110,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			em.ifsc_code,em.joining_date,em.relieving_date,em.education,em.exp_year,em.annual_salary,
 			em.active_status,em.created_date,em.updated_date,fym.fin_name,cpm.comp_name,um.user_name
 			from employee_mast em
-			left join user_mast um on em.user_id = um.user_id
+			left join user_mast um on em.created_by = um.user_id
 			left join employee_desg_mast edm on em.desg_id = edm.desg_id
 			left join fin_year_mast fym on em.fin_year_id = fym.fin_year_id
 			left join company_mast cpm on em.comp_id = cpm.comp_id
@@ -135,7 +137,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select em.employee_id,em.desg_id,em.first_name,em.last_name,em.gender,em.dob,em.phone_number,
 			em.emailid,em.[address],em.city_id,em.aadhaar_number,em.pan_number,em.bankaccount_no,
 			em.ifsc_code,em.joining_date,em.relieving_date,em.education,em.exp_year,em.annual_salary,
-			em.active_status,em.created_date,em.updated_date,em.fin_year_id,em.comp_id,em.user_id
+			em.active_status,em.created_date,em.updated_date,em.fin_year_id,em.comp_id,em.created_by,em.modified_by
 			from employee_mast em
 			where em.employee_id = @employee_id;
 		end try
@@ -219,7 +221,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -248,7 +250,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				updated_date = @updated_date,
 				fin_year_id = @fin_year_id,
 				comp_id = @comp_id,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by=@modified_by
 			where employee_id = @employee_id;
 
 			if @@ROWCOUNT = 0

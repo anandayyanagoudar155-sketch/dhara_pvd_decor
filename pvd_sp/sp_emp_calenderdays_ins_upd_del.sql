@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_emp_calenderdays_ins_upd_del]    Script Date: 03-12-2025 17:14:46 ******/
+/****** Object:  StoredProcedure [dbo].[sp_emp_calenderdays_ins_upd_del]    Script Date: 16-12-2025 15:56:37 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -27,7 +28,8 @@ CREATE procedure [dbo].[sp_emp_calenderdays_ins_upd_del]
 @emp_weekend decimal(5,2) = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -36,7 +38,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -56,8 +58,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot update: month_id is incorrect', 16, 1);
 					return;
 			End
-			insert into emp_calenderdays(comp_id,fin_year_id,month_id,month_days,emp_holidays,emp_weekend,created_date,updated_date,user_id)
-			values(@comp_id,@fin_year_id,@month_id,@month_days,@emp_holidays,@emp_weekend,@created_date,@updated_date,@user_id);
+			insert into emp_calenderdays(comp_id,fin_year_id,month_id,month_days,emp_holidays,emp_weekend,created_date,updated_date,created_by,modified_by)
+			values(@comp_id,@fin_year_id,@month_id,@month_days,@emp_holidays,@emp_weekend,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -86,7 +88,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			from emp_calenderdays ecd
 			left join month_mast mm on ecd.month_id = mm.month_id
 			left join fin_year_mast fym on ecd.fin_year_id = fym.fin_year_id
-			left join user_mast um on ecd.user_id = um.user_id;
+			left join user_mast um on ecd.created_by = um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -107,7 +109,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			Select ecd.emp_calender_id,ecd.fin_year_id,ecd.month_id,ecd.month_days,ecd.emp_holidays,
-			ecd.emp_weekend,ecd.created_date,ecd.updated_date,ecd.user_id
+			ecd.emp_weekend,ecd.created_date,ecd.updated_date,ecd.created_by,ecd.modified_by
 			from emp_calenderdays ecd
 			where ecd.emp_calender_id = @emp_calender_id
 			and ecd.fin_year_id = @fin_year_id
@@ -170,7 +172,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -198,7 +200,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				emp_weekend = @emp_weekend,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by = @modified_by
 			where emp_calender_id = @emp_calender_id;
 
 			if @@ROWCOUNT = 0

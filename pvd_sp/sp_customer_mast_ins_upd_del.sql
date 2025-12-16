@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_customer_mast_ins_upd_del]    Script Date: 03-12-2025 17:11:26 ******/
+/****** Object:  StoredProcedure [dbo].[sp_customer_mast_ins_upd_del]    Script Date: 16-12-2025 14:25:08 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -28,7 +28,8 @@ CREATE procedure [dbo].[sp_customer_mast_ins_upd_del](
 @customer_notes varchar(50)='',
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -44,7 +45,7 @@ begin
 					RAISERROR('Cannot insert: city_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -54,8 +55,8 @@ begin
 					RAISERROR('Cannot insert: customer_name is already present', 16, 1);
 					return;
 			End
-			insert into customer_mast(customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,user_id)
-			values(@customer_name,@prefix,@gender,@phonenumber,@city_id,@cust_address,@email_id,@dob,@aadhaar_number,@license_number,@pan_number,@gst_number,@is_active,@customer_notes,@created_date,@updated_date,@user_id)
+			insert into customer_mast(customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,created_by,modified_by)
+			values(@customer_name,@prefix,@gender,@phonenumber,@city_id,@cust_address,@email_id,@dob,@aadhaar_number,@license_number,@pan_number,@gst_number,@is_active,@customer_notes,@created_date,@updated_date,@created_by,@modified_by)
 		commit transaction;
 	end try
 		begin catch
@@ -134,7 +135,7 @@ begin
 					RAISERROR('Cannot insert: city_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -161,7 +162,8 @@ begin
 			customer_notes=@customer_notes,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 				where customer_id=@customer_id
 				
 			if @@ROWCOUNT = 0
@@ -216,7 +218,7 @@ begin
 		um.user_name 
 		from customer_mast a
 		left join city_mast b on a.city_id=b.city_id
-		left join user_mast um on a.user_id=um.user_id;
+		left join user_mast um on a.created_by=um.user_id;
 		
 	end try
 		begin catch
@@ -239,7 +241,7 @@ end
 if @action='selectone'
 begin
 		begin try
-			select customer_id,customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,user_id from customer_mast where customer_id=@customer_id
+			select customer_id,customer_name,prefix,gender,phonenumber,city_id,cust_address,email_id,dob,aadhaar_number,license_number,pan_number,gst_number,is_active,customer_notes,created_date,updated_date,created_by,modified_by from customer_mast where customer_id=@customer_id
 		end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();

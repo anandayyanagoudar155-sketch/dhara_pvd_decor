@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_hsn_mast_ins_upd_del]    Script Date: 03-12-2025 17:21:33 ******/
+/****** Object:  StoredProcedure [dbo].[sp_hsn_mast_ins_upd_del]    Script Date: 16-12-2025 11:38:19 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -19,7 +19,8 @@ CREATE procedure [dbo].[sp_hsn_mast_ins_upd_del](
 @igst_perc decimal(5,2)=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -30,7 +31,7 @@ if @action='insert'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -40,8 +41,8 @@ begin
 					RAISERROR('Cannot insert: hsn_code is already present', 16, 1);
 					return;
 			End
-			insert into hsn_mast(hsn_code,cgst_perc,sgst_perc,igst_perc,created_date,updated_date,user_id)
-			values(@hsn_code,@cgst_perc,@sgst_perc,@igst_perc,@created_date,@updated_date,@user_id);
+			insert into hsn_mast(hsn_code,cgst_perc,sgst_perc,igst_perc,created_date,updated_date,created_by,modified_by)
+			values(@hsn_code,@cgst_perc,@sgst_perc,@igst_perc,@created_date,@updated_date,@created_by,@modified_by);
 		commit transaction;
 	end try
 		begin catch
@@ -110,7 +111,7 @@ if @action='update'
 begin
 	begin try
 		begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -128,7 +129,8 @@ begin
 			igst_perc=@igst_perc,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where hsn_id=@hsn_id;
 				
 		if @@ROWCOUNT = 0
@@ -165,7 +167,7 @@ begin
 	begin try
 		select hm.hsn_id,hm.hsn_code,hm.cgst_perc,hm.sgst_perc,hm.igst_perc,hm.created_date,hm.updated_date,um.user_name 
 		from hsn_mast hm
-		left join user_mast um on hm.user_id=um.user_id;
+		left join user_mast um on hm.created_by=um.user_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -188,7 +190,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select hsn_id,hsn_code,cgst_perc,sgst_perc,igst_perc,created_date,updated_date,user_id from hsn_mast where hsn_id=@hsn_id;
+		select hsn_id,hsn_code,cgst_perc,sgst_perc,igst_perc,created_date,updated_date,created_by,modified_by from hsn_mast where hsn_id=@hsn_id;
 	end try
 	begin catch
 		set @ErrorNumber = ERROR_NUMBER();

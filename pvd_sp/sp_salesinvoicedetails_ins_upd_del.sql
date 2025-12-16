@@ -1,21 +1,12 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_salesinvoicedetails_ins_upd_del]    Script Date: 03-12-2025 18:22:56 ******/
+/****** Object:  StoredProcedure [dbo].[sp_salesinvoicedetails_ins_upd_del]    Script Date: 16-12-2025 14:57:55 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
-
-
-
-
-
-
-
-
 
 
 
@@ -50,7 +41,8 @@ CREATE procedure [dbo].[sp_salesinvoicedetails_ins_upd_del](
 @comp_id bigint=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -113,7 +105,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -158,9 +150,10 @@ begin
 			comp_id,
 			created_date,
 			updated_date,
-			user_id)
+			created_by,
+			modified_by)
 			values(@sales_id,@inward_id,@product_id,@colour_id,@unit_id,@length,@width,@height,@kg,@liters,@totalsqf_runningfeet,@rate,@totalquantity,@gross_amt,@sgst_perc,@sgst_amt,
-			@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,@discount_amt,@total_amt,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			@cgst_perc,@cgst_amt,@igst_perc,@igst_amt,@discount_perc,@discount_amt,@total_amt,@fin_year_id,@comp_id,@created_date,@updated_date,@created_by,@modified_by);
 			
 			set @customer_id = isnull((Select distinct customer_id from salesinvoicedetails sid 
 								inner join salesinvoice_mast sim on sid.sales_id=sim.sales_id
@@ -440,7 +433,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -495,7 +488,8 @@ begin
 			comp_id=@comp_id,
 			created_date=@created_date,
 			updated_date=@updated_date,
-			user_id=@user_id
+			created_by=@created_by,
+			modified_by=@modified_by
 			where sales_detail_id=@sales_detail_id;
 
 			
@@ -657,7 +651,7 @@ begin
 		left join unit_mast um on sid1.unit_id=um.unit_id
 		left join fin_year_mast fym on sid1.fin_year_id=fym.fin_year_id
 		left join company_mast  cpm on sid1.comp_id=cpm.comp_id
-		left join user_mast usm on sid1.user_id=usm.user_id;
+		left join user_mast usm on sid1.created_by=usm.user_id;
 		
 		
 	end try
@@ -710,7 +704,8 @@ begin
 		comp_id,
 		created_date,
 		updated_date,
-		user_id 
+		created_by,
+		modified_by
 		from salesinvoicedetails where sales_detail_id=@sales_detail_id;
 
 	end try

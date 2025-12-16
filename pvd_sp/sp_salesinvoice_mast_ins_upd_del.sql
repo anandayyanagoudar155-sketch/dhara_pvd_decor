@@ -1,27 +1,12 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_salesinvoice_mast_ins_upd_del]    Script Date: 03-12-2025 18:16:25 ******/
+/****** Object:  StoredProcedure [dbo].[sp_salesinvoice_mast_ins_upd_del]    Script Date: 16-12-2025 14:53:29 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -46,7 +31,8 @@ CREATE procedure [dbo].[sp_salesinvoice_mast_ins_upd_del](
 @comp_id bigint=0,
 @created_date date=null,
 @updated_date date=null,
-@user_id bigint=0
+@created_by bigint=0,
+@modified_by bigint=0
 )
 as
 begin
@@ -76,7 +62,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -95,8 +81,8 @@ begin
 		set @roundoff_total = isnull((ROUND(@net_total,0)),0)
 		
 
-			insert into salesinvoice_mast(prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id)
-			values(@prefix,@suffix,@customer_id,@sales_date,@gross_total,@sgst_total,@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@balance_total,@payment_status,@isactive,@fin_year_id,@comp_id,@created_date,@updated_date,@user_id);
+			insert into salesinvoice_mast(prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by)
+			values(@prefix,@suffix,@customer_id,@sales_date,@gross_total,@sgst_total,@cgst_total,@igst_total,@discount_total,@roundoff_total,@net_total,@balance_total,@payment_status,@isactive,@fin_year_id,@comp_id,@created_date,@updated_date,@created_by,@modified_by);
 
 			
 		commit transaction;
@@ -194,7 +180,7 @@ begin
 					RAISERROR('Cannot insert: comp_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -236,7 +222,8 @@ begin
 				comp_id=@comp_id,
 				created_date=@created_date,
 				updated_date=@updated_date,
-				user_id=@user_id
+				created_by=@created_by,
+				modified_by=@modified_by
 			where sales_id=@sales_id;
 			
 		IF EXISTS (SELECT 1 FROM salesinvoice_mast WHERE sales_id = @sales_id and net_total>0)
@@ -299,7 +286,7 @@ begin
 		left join customer_mast cm on sm.customer_id=cm.customer_id
 		left join fin_year_mast fym on sm.fin_year_id=fym.fin_year_id
 		left join company_mast cpm on sm.comp_id=cpm.comp_id
-		left join user_mast um on sm.user_id=um.user_id;
+		left join user_mast um on sm.created_by=um.user_id;
 	end try
 		begin catch
 			set @ErrorNumber = ERROR_NUMBER();
@@ -322,7 +309,7 @@ end
 if @action='selectone'
 begin
 	begin try
-		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,user_id from salesinvoice_mast where sales_id=@sales_id;
+		select sales_id,prefix,suffix,customer_id,sales_date,gross_total,sgst_total,cgst_total,igst_total,discount_total,roundoff_total,net_total,balance_total,payment_status,isactive,fin_year_id,comp_id,created_date,updated_date,created_by,modified_by from salesinvoice_mast where sales_id=@sales_id;
 	end try
 	begin catch
 		set @ErrorNumber = ERROR_NUMBER();

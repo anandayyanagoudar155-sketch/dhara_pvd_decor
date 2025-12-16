@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_vendor_mast_ins_upd_del]    Script Date: 03-12-2025 18:31:28 ******/
+/****** Object:  StoredProcedure [dbo].[sp_vendor_mast_ins_upd_del]    Script Date: 16-12-2025 15:24:23 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -33,7 +34,8 @@ CREATE procedure [dbo].[sp_vendor_mast_ins_upd_del]
 @vendor_notes varchar(50) = '',
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -47,7 +49,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: city_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -58,9 +60,9 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					return;
 			End
 			insert into vendor_mast(vendor_name,prefix,gender,phonenumber,city_id,address,email_id,dob,
-			aadhaar_number,license_number,pan_number,gst_number,is_active,vendor_notes,created_date,updated_date,user_id)
+			aadhaar_number,license_number,pan_number,gst_number,is_active,vendor_notes,created_date,updated_date,created_by,modified_by)
 			values(@vendor_name,@prefix,@gender,@phonenumber,@city_id,@address,@email_id,@dob,@aadhaar_number,
-			@license_number,@pan_number,@gst_number,@is_active,@vendor_notes,@created_date,@updated_date,@user_id);
+			@license_number,@pan_number,@gst_number,@is_active,@vendor_notes,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -88,7 +90,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			vm.email_id,vm.dob,vm.aadhaar_number,vm.license_number,vm.pan_number,vm.gst_number,vm.is_active,
 			vm.vendor_notes,vm.created_date,vm.updated_date,um.user_name
 			from vendor_mast vm
-			left join user_mast um on vm.user_id = um.user_id
+			left join user_mast um on vm.created_by = um.user_id
 			left join city_mast cm on vm.city_id = cm.city_id;
 		end try
 		begin catch
@@ -111,7 +113,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 		begin try
 			Select vm.vendor_id,vm.vendor_name,vm.prefix,vm.gender,vm.phonenumber,vm.city_id,vm.address,
 			vm.email_id,vm.dob,vm.aadhaar_number,vm.license_number,vm.pan_number,vm.gst_number,vm.is_active,
-			vm.vendor_notes,vm.created_date,vm.updated_date,vm.user_id
+			vm.vendor_notes,vm.created_date,vm.updated_date,vm.created_by,vm.modified_by
 			from vendor_mast vm
 			where vm.vendor_id = @vendor_id;
 		end try
@@ -177,7 +179,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: city_id is incorrect', 16, 1);
 					return;
 			End
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -204,7 +206,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				vendor_notes = @vendor_notes,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id = @user_id
+				created_by = @created_by,
+				modified_by = @modified_by
 			where vendor_id = @vendor_id;
 
 			If @@ROWCOUNT = 0

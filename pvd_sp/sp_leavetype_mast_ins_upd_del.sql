@@ -1,12 +1,13 @@
 USE [DharaPvdDecor_Db_new_1121]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_leavetype_mast_ins_upd_del]    Script Date: 03-12-2025 17:24:43 ******/
+/****** Object:  StoredProcedure [dbo].[sp_leavetype_mast_ins_upd_del]    Script Date: 16-12-2025 16:04:14 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -28,7 +29,8 @@ CREATE procedure [dbo].[sp_leavetype_mast_ins_upd_del]
 @sick_leaves decimal(5,2) = 0,
 @created_date date = null,
 @updated_date date = null,
-@user_id bigint = 0
+@created_by bigint = 0,
+@modified_by bigint = 0
 )
 as
 BEGIN
@@ -37,7 +39,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot insert: user_id is incorrect', 16, 1);
 					return;
@@ -47,8 +49,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 					RAISERROR('Cannot insert: leave_name is already present', 16, 1);
 					return;
 			End
-			insert into leavetype_mast(yearsincompany,allocated_leaves,leave_name,leave_desc,casual_leaves,sick_leaves,created_date,updated_date,user_id)
-			values(@yearsincompany,@allocated_leaves,@leave_name,@leave_desc,@casual_leaves,@sick_leaves,@created_date,@updated_date,@user_id);
+			insert into leavetype_mast(yearsincompany,allocated_leaves,leave_name,leave_desc,casual_leaves,sick_leaves,created_date,updated_date,created_by,modified_by)
+			values(@yearsincompany,@allocated_leaves,@leave_name,@leave_desc,@casual_leaves,@sick_leaves,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
 		end try
 		begin catch
@@ -75,7 +77,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			Select ltm.leavetype_id,ltm.yearsincompany,ltm.allocated_leaves,ltm.leave_name,ltm.leave_desc,
 			ltm.casual_leaves,ltm.sick_leaves,ltm.created_date,ltm.updated_date,um.user_name
 			from leavetype_mast ltm
-			left join user_mast um on ltm.user_id = um.user_id;
+			left join user_mast um on ltm.created_by = um.user_id;
 		end try
 		begin catch
 			set @errornumber = ERROR_NUMBER();
@@ -96,7 +98,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			Select ltm.leavetype_id,ltm.yearsincompany,ltm.allocated_leaves,ltm.leave_name,ltm.leave_desc,
-			ltm.casual_leaves,ltm.sick_leaves,ltm.created_date,ltm.updated_date,ltm.user_id
+			ltm.casual_leaves,ltm.sick_leaves,ltm.created_date,ltm.updated_date,ltm.created_by,ltm.modified_by
 			from leavetype_mast ltm
 			where ltm.leavetype_id = @leavetype_id;
 		end try
@@ -158,7 +160,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
-			if not EXISTS (Select 1 from user_mast where user_id = @user_id)
+			if not EXISTS (Select 1 from user_mast where user_id = @created_by or user_id = @modified_by)
 			Begin
 					RAISERROR('Cannot update: user_id is incorrect', 16, 1);
 					return;
@@ -177,7 +179,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 				sick_leaves = @sick_leaves,
 				created_date = @created_date,
 				updated_date = @updated_date,
-				user_id =@user_id
+				created_by = @created_by,
+				modified_by= @modified_by
 			where leavetype_id = @leavetype_id;
 
 			if @@ROWCOUNT = 0
