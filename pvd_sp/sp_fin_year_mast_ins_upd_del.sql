@@ -1,7 +1,7 @@
 USE [DharaPvdDecor_db]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_fin_year_mast_ins_upd_del]    Script Date: 12/16/2025 1:17:06 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp_fin_year_mast_ins_upd_del]    Script Date: 12/17/2025 12:47:54 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -33,6 +33,14 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction
+
+			if EXISTS (Select 1 from fin_year_mast where fin_name = @fin_name
+			or short_fin_year =@short_fin_year )
+			Begin
+					RAISERROR('Cannot insert: fin_name and short_fin_year is already present', 16, 1);
+					return;
+			End
+
 			insert into fin_year_mast(fin_name,short_fin_year,year_start,year_end,created_date,updated_date,created_by,modified_by)
 			values(@fin_name,@short_fin_year,@year_start,@year_end,@created_date,@updated_date,@created_by,@modified_by);
 			commit transaction;
@@ -61,7 +69,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			select fm.fin_year_id,fm.fin_name,fm.short_fin_year,fm.year_start,fm.year_end,
-			fm.created_date,uc.user_name as created_by_name,fm.modified_by,um.user_name as modified_by_name
+			fm.created_date,fm.updated_date,fm.created_by,fm.modified_by,uc.user_name,um.user_name
 			from fin_year_mast fm
 			left join user_mast uc on fm.created_by = uc.user_id   
 			left join user_mast um on fm.modified_by = um.user_id;
@@ -117,6 +125,8 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 			 set @rec_count = (
 									Select sum(cnt) from
 									(
+										Select count(fin_year_id) as cnt from user_details where fin_year_id=@fin_year_id
+										union all
 										Select count(fin_year_id) as cnt from emp_calenderdays where fin_year_id=@fin_year_id
 										union all
 										Select count(fin_year_id) as cnt from inward_mast where fin_year_id=@fin_year_id
@@ -148,7 +158,7 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 										Select count(fin_year_id) as cnt from emp_leave_mast where fin_year_id=@fin_year_id
 										union all
 										Select count(fin_year_id) as cnt from employee_payslip where fin_year_id=@fin_year_id 
-    ) rec_count
+								    ) as rec_count
 							  );
 			if @rec_count>0
 			begin
@@ -184,6 +194,14 @@ declare @errornumber int, @errorprocedure nvarchar(128), @errorline int, @errorm
 	begin
 		begin try
 			begin transaction;
+
+			if EXISTS (Select 1 from fin_year_mast where fin_name = @fin_name
+			and short_fin_year =@short_fin_year and fin_year_id <> @fin_year_id )
+			Begin
+					RAISERROR('Cannot update: fin_name and short_fin_year is already present', 16, 1);
+					return;
+			End
+
 			update fin_year_mast
 			set fin_name=@fin_name,
 				short_fin_year=@short_fin_year,
